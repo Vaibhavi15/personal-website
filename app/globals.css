@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+
+    /* Primary: Bauhaus Red */
+    --primary: 0 90% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Bauhaus Blue */
+    --secondary: 220 90% 53%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Accent: Bauhaus Yellow */
+    --accent: 48 96% 53%;
+    --accent-foreground: 0 0% 0%;
+  }
+
+  .dark {
+    /* Dark mode colors */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-black;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-mono);
+  }
+
+  /* Bauhaus-inspired typography */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-sans);
+    @apply font-black tracking-tighter;
+  }
+}
+
+@layer components {
+  .shadow-brutal {
+    box-shadow: 0.5rem 0.5rem 0 0 black;
+  }
+
+  .shadow-brutal-inverse {
+    box-shadow: 0.5rem 0.5rem 0 0 white;
+  }
+
+  .shadow-brutal-white {
+    box-shadow: 0.5rem 0.5rem 0 0 white;
+  }
+}
