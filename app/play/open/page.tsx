@@ -355,102 +355,54 @@ function CodeSection() {
 
     console.log("📊 Initialized", Object.keys(contributions).length, "days with 0 contributions")
 
-    // Map real GitHub events to our future timeline
+    // Process real GitHub events - only use events from June 2025 onwards
     if (events && events.length > 0) {
-      console.log("🔄 Mapping real GitHub events to future timeline...")
+      console.log("🔄 Processing GitHub events from June 2025 onwards...")
 
-      // Group events by date first
-      const eventsByDate = {}
+      let totalValidEvents = 0
+      let processedDates = 0
+
       events.forEach((event) => {
         const eventDate = new Date(event.created_at)
         const dateStr = eventDate.toISOString().split("T")[0]
 
-        if (!eventsByDate[dateStr]) {
-          eventsByDate[dateStr] = []
-        }
-        eventsByDate[dateStr].push(event)
-      })
+        // Only process events from June 2025 onwards
+        if (eventDate >= startDate && eventDate <= endDate) {
+          // Count valid contribution events
+          const isValidContribution =
+            event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent"
 
-      console.log("📊 Events grouped by date:", Object.keys(eventsByDate).length, "unique dates")
-      console.log(
-        "📊 Date breakdown:",
-        Object.entries(eventsByDate).map(([date, events]) => ({
-          date,
-          count: events.length,
-          types: events.reduce((acc, e) => {
-            acc[e.type] = (acc[e.type] || 0) + 1
-            return acc
-          }, {}),
-        })),
-      )
+          if (isValidContribution) {
+            contributions[dateStr] = (contributions[dateStr] || 0) + 1
+            totalValidEvents++
 
-      // Get the date range of real GitHub events
-      const githubDates = Object.keys(eventsByDate).sort()
-      const earliestGithubDate = new Date(githubDates[0])
-      const latestGithubDate = new Date(githubDates[githubDates.length - 1])
-
-      console.log("📅 GitHub event date range:", {
-        earliest: earliestGithubDate.toISOString().split("T")[0],
-        latest: latestGithubDate.toISOString().split("T")[0],
-        totalDays: githubDates.length,
-      })
-
-      // Calculate the span of GitHub events in days
-      const githubSpanDays = Math.ceil((latestGithubDate - earliestGithubDate) / (1000 * 60 * 60 * 24)) + 1
-      const targetSpanDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
-
-      console.log("📊 Mapping strategy:", {
-        githubSpanDays,
-        targetSpanDays,
-        strategy: "proportional mapping from GitHub timeline to target timeline",
-      })
-
-      let mappedDates = 0
-      let totalValidEvents = 0
-
-      // Map each GitHub date proportionally to our target timeline
-      Object.entries(eventsByDate).forEach(([originalDateStr, dateEvents]) => {
-        const originalDate = new Date(originalDateStr)
-
-        // Calculate the position of this date within the GitHub timeline (0 to 1)
-        const positionInGithubTimeline = (originalDate - earliestGithubDate) / (latestGithubDate - earliestGithubDate)
-
-        // Map this position to our target timeline
-        const targetTimelinePosition = positionInGithubTimeline * (endDate - startDate)
-        const mappedDate = new Date(startDate.getTime() + targetTimelinePosition)
-        const mappedDateStr = mappedDate.toISOString().split("T")[0]
-
-        // Count valid contribution events for this date
-        const validEvents = dateEvents.filter(
-          (event) => event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent",
-        )
-
-        // Only map if the target date is within our contributions object
-        if (contributions.hasOwnProperty(mappedDateStr)) {
-          contributions[mappedDateStr] += validEvents.length
-          totalValidEvents += validEvents.length
-          mappedDates++
-
-          console.log(`🔄 Mapped ${originalDateStr} → ${mappedDateStr}:`, {
-            positionInGithubTimeline: Math.round(positionInGithubTimeline * 100) + "%",
-            totalEvents: dateEvents.length,
-            validEvents: validEvents.length,
-            eventTypes: dateEvents.reduce((acc, e) => {
-              acc[e.type] = (acc[e.type] || 0) + 1
-              return acc
-            }, {}),
-          })
-        } else {
-          console.log(`⚠️ Skipped ${originalDateStr} → ${mappedDateStr}: target date outside range`)
+            console.log(`✅ Added contribution for ${dateStr}:`, {
+              type: event.type,
+              repo: event.repo?.name,
+              totalForDate: contributions[dateStr],
+            })
+          }
         }
       })
 
-      console.log("✅ Event mapping completed:", {
-        totalGithubDates: Object.keys(eventsByDate).length,
-        mappedDates,
+      // Count how many dates have contributions
+      processedDates = Object.values(contributions).filter((count) => count > 0).length
+
+      console.log("✅ Event processing completed:", {
         totalValidEvents,
-        contributionDays: Object.values(contributions).filter((count) => count > 0).length,
+        processedDates,
+        dateRange: {
+          start: startDate.toISOString().split("T")[0],
+          end: endDate.toISOString().split("T")[0],
+        },
       })
+
+      // Show sample of contributions
+      const contributionSample = Object.entries(contributions)
+        .filter(([date, count]) => count > 0)
+        .slice(0, 10)
+
+      console.log("📊 Sample contributions:", contributionSample)
     } else {
       console.log("⚠️ No events to process")
     }
