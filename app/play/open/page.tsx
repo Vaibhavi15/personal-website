@@ -61,7 +61,7 @@ export default function OpenPage() {
               <div className="flex flex-wrap gap-4 items-center mb-8">
                 <div className="flex items-center gap-2 bg-yellow-500 px-3 py-1 border-2 border-black">
                   <Calendar className="h-5 w-5" />
-                  <span className="font-bold">Last updated: June 7, 2025</span>
+                  <span className="font-bold">Last updated: {new Date().toLocaleDateString()}</span>
                 </div>
                 <div className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1 border-2 border-black">
                   <Clock className="h-5 w-5" />
@@ -333,7 +333,7 @@ function CodeSection() {
     console.log("🔄 Processing GitHub events...")
 
     const contributions = {}
-    const currentDate = new Date("2025-06-07") // Current date in the site's timeline
+    const currentDate = new Date() // Current date in user's timezone
     const startDate = new Date("2025-06-01")
     const endDate = new Date("2025-12-31")
 
@@ -341,6 +341,7 @@ function CodeSection() {
       start: startDate.toISOString().split("T")[0],
       end: endDate.toISOString().split("T")[0],
       current: currentDate.toISOString().split("T")[0],
+      userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     })
 
     // Initialize all dates with 0 contributions
