@@ -194,6 +194,7 @@ export default function OpenPage() {
 function CodeSection() {
   const [githubData, setGithubData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [debugInfo, setDebugInfo] = useState(null)
 
   const currentProjects = [
     {
@@ -240,22 +241,88 @@ function CodeSection() {
 
   useEffect(() => {
     const fetchGithubData = async () => {
+      console.log("🚀 Starting GitHub API fetch...")
+
       try {
-        const response = await fetch("https://api.github.com/users/Vaibhavi15/events?per_page=100")
+        const apiUrl = "https://api.github.com/users/Vaibhavi15/events?per_page=100"
+        console.log("📡 Fetching from URL:", apiUrl)
+
+        const response = await fetch(apiUrl)
+        console.log("📊 Response status:", response.status)
+        console.log("📊 Response headers:", Object.fromEntries(response.headers.entries()))
+
         if (!response.ok) {
-          throw new Error(`GitHub API returned ${response.status}`)
+          const errorText = await response.text()
+          console.error("❌ GitHub API error response:", errorText)
+          throw new Error(`GitHub API returned ${response.status}: ${errorText}`)
         }
+
         const events = await response.json()
+        console.log("✅ GitHub API response received")
+        console.log("📈 Total events fetched:", events.length)
+
+        if (events.length > 0) {
+          console.log("🔍 First event sample:", {
+            type: events[0].type,
+            created_at: events[0].created_at,
+            repo: events[0].repo?.name,
+            actor: events[0].actor?.login,
+          })
+
+          console.log(
+            "🔍 Event types breakdown:",
+            events.reduce((acc, event) => {
+              acc[event.type] = (acc[event.type] || 0) + 1
+              return acc
+            }, {}),
+          )
+
+          console.log("📅 Date range:", {
+            earliest: events[events.length - 1]?.created_at,
+            latest: events[0]?.created_at,
+          })
+        } else {
+          console.warn("⚠️ No events found in GitHub API response")
+        }
 
         // Process events to create contribution data starting from June 2025
         const contributionData = processGithubEvents(events)
+        console.log("🔄 Processed contribution data:", {
+          totalDays: Object.keys(contributionData).length,
+          totalContributions: Object.values(contributionData).reduce((sum, count) => sum + count, 0),
+          sampleDates: Object.entries(contributionData).slice(0, 5),
+        })
+
         setGithubData(contributionData)
+        setDebugInfo({
+          source: "github-api",
+          eventsCount: events.length,
+          processedDays: Object.keys(contributionData).length,
+          totalContributions: Object.values(contributionData).reduce((sum, count) => sum + count, 0),
+        })
       } catch (error) {
-        console.error("Error fetching GitHub data:", error)
+        console.error("💥 Error fetching GitHub data:", error)
+        console.log("🔄 Falling back to mock data...")
+
         // Fallback to mock data that looks realistic
-        setGithubData(generateMockContributions())
+        const mockData = generateMockContributions()
+        console.log("🎭 Generated mock data:", {
+          totalDays: Object.keys(mockData).length,
+          totalContributions: Object.values(mockData).reduce((sum, count) => sum + count, 0),
+          sampleDates: Object.entries(mockData).slice(0, 5),
+        })
+
+        setGithubData(mockData)
+        setDebugInfo({
+          source: "mock-data",
+          error: error.message,
+          eventsCount: 0,
+          processedDays: Object.keys(mockData).length,
+          totalContributions: Object.values(mockData).reduce((sum, count) => sum + count, 0),
+        })
       } finally {
         setLoading(false)
+        console.log("✨ GitHub data fetch completed")
       }
     }
 
@@ -263,10 +330,18 @@ function CodeSection() {
   }, [])
 
   const processGithubEvents = (events) => {
+    console.log("🔄 Processing GitHub events...")
+
     const contributions = {}
     const currentDate = new Date("2025-06-07") // Current date in the site's timeline
     const startDate = new Date("2025-06-01")
     const endDate = new Date("2025-12-31")
+
+    console.log("📅 Target date range:", {
+      start: startDate.toISOString().split("T")[0],
+      end: endDate.toISOString().split("T")[0],
+      current: currentDate.toISOString().split("T")[0],
+    })
 
     // Initialize all dates with 0 contributions
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -274,34 +349,67 @@ function CodeSection() {
       contributions[dateStr] = 0
     }
 
+    console.log("📊 Initialized", Object.keys(contributions).length, "days with 0 contributions")
+
     // Map real GitHub events to our future timeline
     if (events && events.length > 0) {
+      console.log("🔄 Mapping real GitHub events to future timeline...")
+
       // Get the most recent real GitHub date
       const recentGitHubDate = new Date(events[0].created_at)
+      console.log("📅 Most recent GitHub event:", recentGitHubDate.toISOString())
 
       // Calculate the difference between our current date and the most recent GitHub date
       const daysDiff = Math.floor((currentDate - recentGitHubDate) / (1000 * 60 * 60 * 24))
+      console.log("📊 Days difference to shift events:", daysDiff)
+
+      let mappedEvents = 0
+      let validEventTypes = 0
 
       // Map each GitHub event to our future timeline
-      events.forEach((event) => {
+      events.forEach((event, index) => {
         const eventDate = new Date(event.created_at)
         // Shift the event date to our future timeline
         const shiftedDate = new Date(eventDate)
         shiftedDate.setDate(shiftedDate.getDate() + daysDiff)
 
         const dateStr = shiftedDate.toISOString().split("T")[0]
+
         if (contributions.hasOwnProperty(dateStr)) {
           if (event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent") {
             contributions[dateStr]++
+            validEventTypes++
+
+            if (index < 5) {
+              // Log first 5 mappings for debugging
+              console.log(`🔄 Mapped event ${index + 1}:`, {
+                originalDate: eventDate.toISOString().split("T")[0],
+                shiftedDate: dateStr,
+                type: event.type,
+                newCount: contributions[dateStr],
+              })
+            }
           }
+          mappedEvents++
         }
       })
+
+      console.log("✅ Event mapping completed:", {
+        totalEvents: events.length,
+        mappedEvents,
+        validEventTypes,
+        contributionDays: Object.values(contributions).filter((count) => count > 0).length,
+      })
+    } else {
+      console.log("⚠️ No events to process")
     }
 
     return contributions
   }
 
   const generateMockContributions = () => {
+    console.log("🎭 Generating mock contribution data...")
+
     const contributions = {}
     const startDate = new Date("2025-06-01")
     const endDate = new Date("2025-12-31")
@@ -315,6 +423,7 @@ function CodeSection() {
     ]
 
     let weekCounter = 0
+    let totalContributions = 0
 
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split("T")[0]
@@ -325,12 +434,19 @@ function CodeSection() {
       const contributionCount = activityPattern[patternWeek][dayOfWeek]
 
       contributions[dateStr] = contributionCount
+      totalContributions += contributionCount
 
       // Increment week counter on Saturdays
       if (dayOfWeek === 6) {
         weekCounter++
       }
     }
+
+    console.log("🎭 Mock data generated:", {
+      totalDays: Object.keys(contributions).length,
+      totalContributions,
+      activeDays: Object.values(contributions).filter((count) => count > 0).length,
+    })
 
     return contributions
   }
@@ -418,6 +534,32 @@ function CodeSection() {
 
   return (
     <div className="space-y-8">
+      {/* Debug Info Panel */}
+      {debugInfo && (
+        <div className="bg-gray-100 border-4 border-black p-4 font-mono text-sm">
+          <h4 className="font-bold mb-2">🔍 DEBUG INFO</h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <strong>Data Source:</strong> {debugInfo.source}
+            </div>
+            <div>
+              <strong>Events Count:</strong> {debugInfo.eventsCount}
+            </div>
+            <div>
+              <strong>Processed Days:</strong> {debugInfo.processedDays}
+            </div>
+            <div>
+              <strong>Total Contributions:</strong> {debugInfo.totalContributions}
+            </div>
+            {debugInfo.error && (
+              <div className="col-span-2">
+                <strong>Error:</strong> {debugInfo.error}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* GitHub Contributions */}
       <div className="bg-white border-4 border-black p-6">
         <div className="flex justify-between items-center mb-6">
