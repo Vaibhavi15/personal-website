@@ -261,10 +261,12 @@ function CodeSection() {
 
   const processGithubEvents = (events) => {
     const contributions = {}
-    // Show contributions from the past year
-    const endDate = new Date()
-    const startDate = new Date()
-    startDate.setFullYear(endDate.getFullYear() - 1)
+    const now = new Date()
+    const currentYear = now.getFullYear()
+
+    // Start from June of current year, or 6 months ago if we're past June
+    const startDate = new Date(currentYear, 5, 1) // June 1st of current year
+    const endDate = new Date(currentYear, 11, 31) // December 31st of current year
 
     // Initialize all dates with 0 contributions
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -287,10 +289,10 @@ function CodeSection() {
 
   const generateMockContributions = () => {
     const contributions = {}
-    // Show contributions from the past year
-    const endDate = new Date()
-    const startDate = new Date()
-    startDate.setFullYear(endDate.getFullYear() - 1)
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const startDate = new Date(currentYear, 5, 1) // June 1st of current year
+    const endDate = new Date(currentYear, 11, 31) // December 31st of current year
 
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split("T")[0]
@@ -314,35 +316,29 @@ function CodeSection() {
   const renderContributionGraph = () => {
     if (!githubData) return null
 
-    // Generate months for the past year
-    const months = []
-    const currentDate = new Date()
-    for (let i = 11; i >= 0; i--) {
-      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1)
-      months.push(date.toLocaleDateString("en-US", { month: "short" }))
-    }
-
+    const months = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
     // Group contributions by week
     const weeks = []
-    const endDate = new Date()
-    const startDate = new Date()
-    startDate.setFullYear(endDate.getFullYear() - 1)
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const startDate = new Date(currentYear, 5, 1) // June 1st of current year
 
     // Find the first Sunday
     const firstSunday = new Date(startDate)
     firstSunday.setDate(startDate.getDate() - startDate.getDay())
 
-    const currentDateIter = new Date(firstSunday)
+    const currentDate = new Date(firstSunday)
+    const endDate = new Date(currentYear, 11, 31) // December 31st of current year
 
-    while (currentDateIter <= endDate) {
+    while (currentDate <= endDate) {
       const week = []
       for (let i = 0; i < 7; i++) {
-        const dateStr = currentDateIter.toISOString().split("T")[0]
+        const dateStr = currentDate.toISOString().split("T")[0]
         const count = githubData[dateStr] || 0
-        week.push({ date: dateStr, count, day: currentDateIter.getDay() })
-        currentDateIter.setDate(currentDateIter.getDate() + 1)
+        week.push({ date: dateStr, count, day: currentDate.getDay() })
+        currentDate.setDate(currentDate.getDate() + 1)
       }
       weeks.push(week)
     }
@@ -422,7 +418,7 @@ function CodeSection() {
           <>
             {renderContributionGraph()}
             <div className="flex justify-between items-center mt-4">
-              <div className="text-xs font-mono text-gray-600">Past 12 months</div>
+              <div className="text-xs font-mono text-gray-600">June - December {new Date().getFullYear()}</div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono">Less</span>
                 <div className="flex gap-1">
