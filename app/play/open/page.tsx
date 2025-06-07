@@ -194,7 +194,6 @@ export default function OpenPage() {
 function CodeSection() {
   const [githubData, setGithubData] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [debugInfo, setDebugInfo] = useState(null)
 
   const currentProjects = [
     {
@@ -241,88 +240,23 @@ function CodeSection() {
 
   useEffect(() => {
     const fetchGithubData = async () => {
-      console.log("🚀 Starting GitHub API fetch...")
-
       try {
         const apiUrl = "https://api.github.com/users/Vaibhavi15/events?per_page=100"
-        console.log("📡 Fetching from URL:", apiUrl)
-
         const response = await fetch(apiUrl)
-        console.log("📊 Response status:", response.status)
-        console.log("📊 Response headers:", Object.fromEntries(response.headers.entries()))
 
         if (!response.ok) {
-          const errorText = await response.text()
-          console.error("❌ GitHub API error response:", errorText)
-          throw new Error(`GitHub API returned ${response.status}: ${errorText}`)
+          throw new Error(`GitHub API returned ${response.status}`)
         }
 
         const events = await response.json()
-        console.log("✅ GitHub API response received")
-        console.log("📈 Total events fetched:", events.length)
-
-        if (events.length > 0) {
-          console.log("🔍 First event sample:", {
-            type: events[0].type,
-            created_at: events[0].created_at,
-            repo: events[0].repo?.name,
-            actor: events[0].actor?.login,
-          })
-
-          console.log(
-            "🔍 Event types breakdown:",
-            events.reduce((acc, event) => {
-              acc[event.type] = (acc[event.type] || 0) + 1
-              return acc
-            }, {}),
-          )
-
-          console.log("📅 Date range:", {
-            earliest: events[events.length - 1]?.created_at,
-            latest: events[0]?.created_at,
-          })
-        } else {
-          console.warn("⚠️ No events found in GitHub API response")
-        }
-
-        // Process events to create contribution data starting from June 2025
         const contributionData = processGithubEvents(events)
-        console.log("🔄 Processed contribution data:", {
-          totalDays: Object.keys(contributionData).length,
-          totalContributions: Object.values(contributionData).reduce((sum, count) => sum + count, 0),
-          sampleDates: Object.entries(contributionData).slice(0, 5),
-        })
-
         setGithubData(contributionData)
-        setDebugInfo({
-          source: "github-api",
-          eventsCount: events.length,
-          processedDays: Object.keys(contributionData).length,
-          totalContributions: Object.values(contributionData).reduce((sum, count) => sum + count, 0),
-        })
       } catch (error) {
-        console.error("💥 Error fetching GitHub data:", error)
-        console.log("🔄 Falling back to mock data...")
-
-        // Fallback to mock data that looks realistic
+        // Fallback to mock data
         const mockData = generateMockContributions()
-        console.log("🎭 Generated mock data:", {
-          totalDays: Object.keys(mockData).length,
-          totalContributions: Object.values(mockData).reduce((sum, count) => sum + count, 0),
-          sampleDates: Object.entries(mockData).slice(0, 5),
-        })
-
         setGithubData(mockData)
-        setDebugInfo({
-          source: "mock-data",
-          error: error.message,
-          eventsCount: 0,
-          processedDays: Object.keys(mockData).length,
-          totalContributions: Object.values(mockData).reduce((sum, count) => sum + count, 0),
-        })
       } finally {
         setLoading(false)
-        console.log("✨ GitHub data fetch completed")
       }
     }
 
@@ -330,8 +264,6 @@ function CodeSection() {
   }, [])
 
   const processGithubEvents = (events) => {
-    console.log("🔄 Processing GitHub events...")
-
     const contributions = {}
     const currentDate = new Date()
     const startDate = new Date("2025-06-01")
@@ -340,28 +272,14 @@ function CodeSection() {
     sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
     const endDate = sixMonthsFromNow > endOfYear ? sixMonthsFromNow : endOfYear
 
-    console.log("📅 Target date range:", {
-      start: startDate.toISOString().split("T")[0],
-      end: endDate.toISOString().split("T")[0],
-      current: currentDate.toISOString().split("T")[0],
-      userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    })
-
     // Initialize all dates with 0 contributions
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split("T")[0]
       contributions[dateStr] = 0
     }
 
-    console.log("📊 Initialized", Object.keys(contributions).length, "days with 0 contributions")
-
     // Process real GitHub events - only use events from June 2025 onwards
     if (events && events.length > 0) {
-      console.log("🔄 Processing GitHub events from June 2025 onwards...")
-
-      let totalValidEvents = 0
-      let processedDates = 0
-
       events.forEach((event) => {
         const eventDate = new Date(event.created_at)
         const dateStr = eventDate.toISOString().split("T")[0]
@@ -374,49 +292,18 @@ function CodeSection() {
 
           if (isValidContribution) {
             contributions[dateStr] = (contributions[dateStr] || 0) + 1
-            totalValidEvents++
-
-            console.log(`✅ Added contribution for ${dateStr}:`, {
-              type: event.type,
-              repo: event.repo?.name,
-              totalForDate: contributions[dateStr],
-            })
           }
         }
       })
-
-      // Count how many dates have contributions
-      processedDates = Object.values(contributions).filter((count) => count > 0).length
-
-      console.log("✅ Event processing completed:", {
-        totalValidEvents,
-        processedDates,
-        dateRange: {
-          start: startDate.toISOString().split("T")[0],
-          end: endDate.toISOString().split("T")[0],
-        },
-      })
-
-      // Show sample of contributions
-      const contributionSample = Object.entries(contributions)
-        .filter(([date, count]) => count > 0)
-        .slice(0, 10)
-
-      console.log("📊 Sample contributions:", contributionSample)
-    } else {
-      console.log("⚠️ No events to process")
     }
 
     return contributions
   }
 
   const generateMockContributions = () => {
-    console.log("🎭 Generating mock contribution data...")
-
     const contributions = {}
     const currentDate = new Date()
     const startDate = new Date("2025-06-01")
-    // Use the same end date logic as the real data processing
     const endOfYear = new Date(currentDate.getFullYear(), 11, 31)
     const sixMonthsFromNow = new Date(currentDate)
     sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
@@ -449,17 +336,6 @@ function CodeSection() {
         weekCounter++
       }
     }
-
-    console.log("🎭 Mock data generated:", {
-      totalDays: Object.keys(contributions).length,
-      totalContributions,
-      activeDays: Object.values(contributions).filter((count) => count > 0).length,
-      dateRange: {
-        start: startDate.toISOString().split("T")[0],
-        end: endDate.toISOString().split("T")[0],
-        current: currentDate.toISOString().split("T")[0],
-      },
-    })
 
     return contributions
   }
@@ -563,32 +439,6 @@ function CodeSection() {
 
   return (
     <div className="space-y-8">
-      {/* Debug Info Panel */}
-      {debugInfo && (
-        <div className="bg-gray-100 border-4 border-black p-4 font-mono text-sm">
-          <h4 className="font-bold mb-2">🔍 DEBUG INFO</h4>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <strong>Data Source:</strong> {debugInfo.source}
-            </div>
-            <div>
-              <strong>Events Count:</strong> {debugInfo.eventsCount}
-            </div>
-            <div>
-              <strong>Processed Days:</strong> {debugInfo.processedDays}
-            </div>
-            <div>
-              <strong>Total Contributions:</strong> {debugInfo.totalContributions}
-            </div>
-            {debugInfo.error && (
-              <div className="col-span-2">
-                <strong>Error:</strong> {debugInfo.error}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* GitHub Contributions */}
       <div className="bg-white border-4 border-black p-6">
         <div className="flex justify-between items-center mb-6">
