@@ -216,79 +216,123 @@ export default function HomePage() {
             </div>
 
             {/* Latest Posts Section */}
+            {/* Open Page Summary Section */}
             <div className="space-y-8">
               <h2 className="text-4xl font-black tracking-tighter uppercase border-b-4 border-black pb-2 inline-block">
-                LATEST POSTS
+                LIVING OPENLY
               </h2>
+              <p className="text-xl font-mono max-w-3xl">
+                Tracking my journey through code, books, fitness, and scuba diving with full transparency and
+                accountability.
+              </p>
 
-              <div className="grid gap-8 md:grid-cols-3">
-                <div className="bg-white border-8 border-black p-6 shadow-brutal h-full">
-                  <div className="aspect-video bg-gray-200 mb-4">
-                    <img
-                      src="/sales-call-tracking.png"
-                      alt="Sales Call Tracking"
-                      className="w-full h-full object-cover"
-                    />
+              <div className="grid gap-8 md:grid-cols-2">
+                {/* Current Progress */}
+                <div className="bg-white border-8 border-black p-8 shadow-brutal">
+                  <h3 className="text-2xl font-black mb-6 uppercase border-b-4 border-black pb-2">CURRENT PROGRESS</h3>
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 bg-black"></div>
+                        <span className="font-bold">Active Projects</span>
+                      </div>
+                      <span className="text-2xl font-black">5</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 bg-red-600"></div>
+                        <span className="font-bold">Books Read</span>
+                      </div>
+                      <span className="text-2xl font-black">4/12</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 bg-blue-600"></div>
+                        <span className="font-bold">Workout Sessions</span>
+                      </div>
+                      <span className="text-2xl font-black">28h</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 bg-yellow-500"></div>
+                        <span className="font-bold">Scuba Dives</span>
+                      </div>
+                      <span className="text-2xl font-black">19</span>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-black mb-2 uppercase">SALES CALL TRACKING</h3>
-                  <p className="text-sm font-mono mb-4">
-                    A guide to choosing the best tool for tracking sales calls efficiently.
-                  </p>
-                  <a
-                    href="https://vaibhavipai.medium.com/sales-call-tracking-a-guide-to-pick-your-weapon-6303a08ff4ba"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-red-600 text-white border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
-                  >
-                    READ MORE
-                  </a>
                 </div>
 
-                <div className="bg-white border-8 border-black p-6 shadow-brutal h-full">
-                  <div className="aspect-video bg-gray-200 mb-4">
-                    <img
-                      src="/garduino-raspberry-pi.png"
-                      alt="Garduino Raspberry Pi Project"
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <h3 className="text-xl font-black mb-2 uppercase">AUTOMATED WATERING WITH RASPBERRY PI</h3>
-                  <p className="text-sm font-mono mb-4">
-                    Built a smart plant watering system using Raspberry Pi and Firebase.
-                  </p>
-                  <a
-                    href="https://medium.com/@vaibhavipai/how-i-built-a-watering-system-for-my-plants-using-a-raspberry-pi-eaef378c816d"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-blue-600 text-white border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
-                  >
-                    READ MORE
-                  </a>
-                </div>
+                {/* Currently Working On */}
+                <div className="bg-black text-white border-8 border-black p-8 shadow-brutal-inverse">
+                  <h3 className="text-2xl font-black mb-6 uppercase border-b-4 border-white pb-2">
+                    CURRENTLY WORKING ON
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="bg-white text-black border-2 border-white p-4">
+                      <h4 className="font-bold">AI Accountability Bot</h4>
+                      <p className="font-mono text-sm mt-1">Empathetic AI based on Atomic Habits principles</p>
+                      <div className="mt-2 bg-gray-200 h-2 border border-black">
+                        <div className="bg-red-600 h-full" style={{ width: "65%" }}></div>
+                      </div>
+                      <p className="text-xs font-mono mt-1 text-right">65% complete</p>
+                    </div>
 
-                <div className="bg-white border-8 border-black p-6 shadow-brutal h-full">
-                  <div className="aspect-video bg-gray-200 mb-4">
-                    <img src="/food-crawl-meetup.png" alt="Food Crawl Meetup" className="w-full h-full object-cover" />
+                    <div className="space-y-2 font-mono">
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 bg-red-600"></div>
+                        <span>Reading: "Made to Stick" by Dan & Chip Heath</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 bg-blue-600"></div>
+                        <span>Training for Devils Circuit obstacle race</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-4 w-4 bg-yellow-500"></div>
+                        <span>Planning Komodo liveaboard scuba trip</span>
+                      </div>
+                    </div>
                   </div>
-                  <h3 className="text-xl font-black mb-2 uppercase">UNDERDOG EATERIES FOOD CRAWL</h3>
-                  <p className="text-sm font-mono mb-4">Led a food crawl to explore Bangalore's hidden food gems.</p>
-                  <a
-                    href="https://www.localguidesconnect.com/t/recap-underdog-eateries-food-crawl-meet-up/294149"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-yellow-500 text-black border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
-                  >
-                    READ MORE
-                  </a>
+                </div>
+              </div>
+
+              {/* Recent Highlights */}
+              <div className="bg-gradient-to-r from-blue-600 to-yellow-500 border-8 border-black p-8 shadow-brutal">
+                <h3 className="text-2xl font-black mb-6 uppercase border-b-4 border-black pb-2 text-white">
+                  RECENT HIGHLIGHTS
+                </h3>
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="bg-white border-4 border-black p-4">
+                    <h4 className="font-bold text-lg mb-2">CODE</h4>
+                    <p className="font-mono text-sm">
+                      5 active projects including AI accountability bot and microlearning app
+                    </p>
+                  </div>
+                  <div className="bg-white border-4 border-black p-4">
+                    <h4 className="font-bold text-lg mb-2">BOOKS</h4>
+                    <p className="font-mono text-sm">
+                      33% through 2025 reading goal with focus on business and marketing
+                    </p>
+                  </div>
+                  <div className="bg-white border-4 border-black p-4">
+                    <h4 className="font-bold text-lg mb-2">ADVENTURES</h4>
+                    <p className="font-mono text-sm">
+                      Recent dives in Andamans, training for obstacle race, planning Indonesia trip
+                    </p>
+                  </div>
                 </div>
               </div>
 
               <div className="flex justify-center">
                 <Link
-                  href="/blog"
-                  className="bg-black text-white border-4 border-black px-6 py-3 font-bold text-lg shadow-brutal hover:translate-y-1 hover:shadow-none transition-all"
+                  href="/play/open"
+                  className="bg-black text-white border-4 border-black px-8 py-4 font-bold text-xl shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-flex items-center gap-3"
                 >
-                  VIEW ALL POSTS
+                  VIEW FULL OPEN PAGE
+                  <div className="flex gap-1">
+                    <div className="h-6 w-6 bg-red-600"></div>
+                    <div className="h-6 w-6 bg-blue-600"></div>
+                    <div className="h-6 w-6 bg-yellow-500"></div>
+                  </div>
                 </Link>
               </div>
             </div>

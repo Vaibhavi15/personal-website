@@ -4,10 +4,13 @@ import { useState } from "react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { LoadingCard } from "@/components/ui/loading-spinner"
+import { useTestimonials } from "@/hooks/use-supabase-data"
 import { MapPin, Utensils, Compass, Camera, Users, Calendar, ExternalLink, Instagram } from "lucide-react"
 
 export default function AhaaAhaaraPage() {
   const [activeTab, setActiveTab] = useState("about")
+  const { testimonials, loading, error } = useTestimonials("ahaa-ahaara")
 
   return (
     <div className="min-h-screen font-mono">
@@ -283,54 +286,38 @@ export default function AhaaAhaaraPage() {
                 <div className="space-y-6">
                   <h2 className="text-3xl font-black mb-6 uppercase border-b-4 border-black pb-2">TESTIMONIALS</h2>
 
-                  <div className="grid gap-6 md:grid-cols-2">
-                    <div className="bg-white border-4 border-black p-6 shadow-brutal">
-                      <p className="font-mono italic mb-4">
-                        "The Ahaa! Ahaara experience was the highlight of my trip to Bengaluru! The combination of
-                        solving clues, discovering hidden food gems, and learning about the city's culture was
-                        absolutely fantastic. I would never have found these amazing eateries on my own."
-                      </p>
-                      <div className="font-bold">- Priya S., Mumbai</div>
+                  {loading ? (
+                    <LoadingCard />
+                  ) : error ? (
+                    <div className="bg-red-600 text-white border-4 border-black p-6">
+                      <p className="font-mono">Failed to load testimonials: {error}</p>
                     </div>
+                  ) : (
+                    <>
+                      <div className="grid gap-6 md:grid-cols-2">
+                        {testimonials.map((testimonial) => (
+                          <div key={testimonial.id} className="bg-white border-4 border-black p-6 shadow-brutal">
+                            <p className="font-mono italic mb-4">"{testimonial.content}"</p>
+                            <div className="font-bold">
+                              - {testimonial.name}
+                              {testimonial.title && `, ${testimonial.title}`}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
 
-                    <div className="bg-white border-4 border-black p-6 shadow-brutal">
-                      <p className="font-mono italic mb-4">
-                        "As a Bengaluru resident for 10 years, I thought I knew the city well. The Ahaa! Ahaara
-                        experience proved me wrong! I discovered places in Basavangudi I had never visited before and
-                        tasted some of the most authentic South Indian food. Highly recommended even for locals!"
-                      </p>
-                      <div className="font-bold">- Rahul M., Bengaluru</div>
-                    </div>
-
-                    <div className="bg-white border-4 border-black p-6 shadow-brutal">
-                      <p className="font-mono italic mb-4">
-                        "What a unique concept! The puzzles were challenging but fun, and the food stops were
-                        incredible. The stories behind each location added so much depth to the experience. Our guide
-                        was knowledgeable and passionate about Bengaluru's food culture."
-                      </p>
-                      <div className="font-bold">- Sarah J., London</div>
-                    </div>
-
-                    <div className="bg-white border-4 border-black p-6 shadow-brutal">
-                      <p className="font-mono italic mb-4">
-                        "We did the Ahaa! Ahaara experience as a team-building activity, and it was perfect! Solving
-                        clues together while exploring Basavangudi and enjoying amazing food created such a memorable
-                        day. The cultural insights were fascinating, and the food was out of this world!"
-                      </p>
-                      <div className="font-bold">- Tech Innovators Team, Bengaluru</div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-center mt-8">
-                    <a
-                      href="https://www.instagram.com/ahaa_ahaara/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="bg-black text-white border-4 border-black px-6 py-3 font-bold text-lg shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-flex items-center gap-2"
-                    >
-                      SEE MORE ON INSTAGRAM <ExternalLink className="h-5 w-5" />
-                    </a>
-                  </div>
+                      <div className="flex justify-center mt-8">
+                        <a
+                          href="https://www.instagram.com/ahaa_ahaara/"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-black text-white border-4 border-black px-6 py-3 font-bold text-lg shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-flex items-center gap-2"
+                        >
+                          SEE MORE ON INSTAGRAM <ExternalLink className="h-5 w-5" />
+                        </a>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>

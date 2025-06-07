@@ -94,7 +94,7 @@ export default function AIPage() {
                     </li>
                     <li className="flex items-start gap-3">
                       <div className="h-6 w-6 bg-white mt-1 flex-shrink-0"></div>
-                      <span>AI Sales Development Representative(SDR) for lead generation and qualification</span>
+                      <span>Empathetic AI Accountability bot based on Atomic Habits principles</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <div className="h-6 w-6 bg-white mt-1 flex-shrink-0"></div>

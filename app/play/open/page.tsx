@@ -4,19 +4,21 @@ import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import { LoadingSpinner } from "@/components/ui/loading-spinner"
+import { useBooks, useWorkoutSessions } from "@/hooks/use-supabase-data"
 import Link from "next/link"
-import { Book, Dumbbell, Waves, ChefHat, Calendar, Star, Clock, ArrowRight } from "lucide-react"
+import { Book, Dumbbell, Waves, Code, Calendar, Star, Clock, ArrowRight, GitCommit } from "lucide-react"
 
 export default function OpenPage() {
   const searchParams = useSearchParams()
-  const [activeSection, setActiveSection] = useState("books")
+  const [activeSection, setActiveSection] = useState("code")
   const [animateIn, setAnimateIn] = useState(false)
 
   useEffect(() => {
     setAnimateIn(true)
     // Check for tab parameter in URL
     const tab = searchParams.get("tab")
-    if (tab && ["books", "fitness", "scuba", "cooking"].includes(tab)) {
+    if (tab && ["code", "books", "fitness", "scuba"].includes(tab)) {
       setActiveSection(tab)
     }
   }, [searchParams])
@@ -44,7 +46,7 @@ export default function OpenPage() {
               <div className="flex gap-4 items-center">
                 <div className="h-8 w-8 bg-blue-600"></div>
                 <p className="text-2xl font-mono max-w-3xl">
-                  Living life openly. Tracking my journey through books, fitness, scuba diving, and cooking.
+                  Living life openly. Tracking my journey through code, books, fitness, and scuba diving.
                 </p>
               </div>
             </div>
@@ -59,15 +61,26 @@ export default function OpenPage() {
               <div className="flex flex-wrap gap-4 items-center mb-8">
                 <div className="flex items-center gap-2 bg-yellow-500 px-3 py-1 border-2 border-black">
                   <Calendar className="h-5 w-5" />
-                  <span className="font-bold">Last updated: May 22, 2025</span>
+                  <span className="font-bold">Last updated: June 7, 2025</span>
                 </div>
                 <div className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1 border-2 border-black">
                   <Clock className="h-5 w-5" />
-                  <span className="font-bold">2025 Progress: 42%</span>
+                  <span className="font-bold">2025 Progress: 45%</span>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <button
+                  onClick={() => handleSectionChange("code")}
+                  className={`flex items-center justify-center gap-2 p-4 border-4 border-black font-bold text-lg transition-all ${
+                    activeSection === "code"
+                      ? "bg-black text-white shadow-brutal-inverse"
+                      : "bg-white hover:bg-gray-100"
+                  }`}
+                >
+                  <Code className="h-6 w-6" />
+                  <span>CODE</span>
+                </button>
                 <button
                   onClick={() => handleSectionChange("books")}
                   className={`flex items-center justify-center gap-2 p-4 border-4 border-black font-bold text-lg transition-all ${
@@ -95,24 +108,13 @@ export default function OpenPage() {
                   <Waves className="h-6 w-6" />
                   <span>SCUBA</span>
                 </button>
-                <button
-                  onClick={() => handleSectionChange("cooking")}
-                  className={`flex items-center justify-center gap-2 p-4 border-4 border-black font-bold text-lg transition-all ${
-                    activeSection === "cooking"
-                      ? "bg-black text-white shadow-brutal-inverse"
-                      : "bg-white hover:bg-gray-100"
-                  }`}
-                >
-                  <ChefHat className="h-6 w-6" />
-                  <span>COOKING</span>
-                </button>
               </div>
 
               <div className={`transition-opacity duration-300 ${animateIn ? "opacity-100" : "opacity-0"}`}>
+                {activeSection === "code" && <CodeSection />}
                 {activeSection === "books" && <BooksSection />}
                 {activeSection === "fitness" && <FitnessSection />}
                 {activeSection === "scuba" && <ScubaSection />}
-                {activeSection === "cooking" && <CookingSection />}
               </div>
             </div>
 
@@ -122,6 +124,10 @@ export default function OpenPage() {
                 <div>
                   <h3 className="text-xl font-bold mb-4 uppercase">CURRENTLY</h3>
                   <ul className="space-y-3 font-mono">
+                    <li className="flex items-start gap-3">
+                      <Code className="h-5 w-5 mt-1 flex-shrink-0 text-white" />
+                      <span>Building: AI Accountability bot with Atomic Habits principles</span>
+                    </li>
                     <li className="flex items-start gap-3">
                       <Book className="h-5 w-5 mt-1 flex-shrink-0 text-red-600" />
                       <span>Reading: "Made to Stick" by Dan and Chip Heath</span>
@@ -134,15 +140,15 @@ export default function OpenPage() {
                       <Waves className="h-5 w-5 mt-1 flex-shrink-0 text-yellow-500" />
                       <span>Planning an upcoming Liveaboard scuba trip to Komodo, Indonesia</span>
                     </li>
-                    <li className="flex items-start gap-3">
-                      <ChefHat className="h-5 w-5 mt-1 flex-shrink-0 text-white" />
-                      <span>Experimenting with Indian street food recipes</span>
-                    </li>
                   </ul>
                 </div>
                 <div>
                   <h3 className="text-xl font-bold mb-4 uppercase">UPCOMING</h3>
                   <ul className="space-y-3 font-mono">
+                    <li className="flex items-start gap-3">
+                      <Code className="h-5 w-5 mt-1 flex-shrink-0 text-white" />
+                      <span>Launch: AI microlearning app and careers AI bot</span>
+                    </li>
                     <li className="flex items-start gap-3">
                       <Book className="h-5 w-5 mt-1 flex-shrink-0 text-red-600" />
                       <span>Goal: Read 12 books in 2025 (4/12 completed)</span>
@@ -154,10 +160,6 @@ export default function OpenPage() {
                     <li className="flex items-start gap-3">
                       <Waves className="h-5 w-5 mt-1 flex-shrink-0 text-yellow-500" />
                       <span>Obtain Dry Suit and Nitrox certifications</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <ChefHat className="h-5 w-5 mt-1 flex-shrink-0 text-white" />
-                      <span>Master airfrying and Konkani recipes</span>
                     </li>
                   </ul>
                 </div>
@@ -174,7 +176,7 @@ export default function OpenPage() {
                   numbers—it's about noticing connections between different areas of my life and learning from them."
                 </p>
                 <p className="font-mono text-lg">
-                  "I've found that my reading habits directly influence my cooking creativity, and my fitness routine
+                  "I've found that my reading habits directly influence my coding creativity, and my fitness routine
                   improves my scuba diving endurance. Everything is connected, and being open about these journeys helps
                   me stay accountable and might inspire others along the way."
                 </p>
@@ -189,26 +191,375 @@ export default function OpenPage() {
   )
 }
 
+function CodeSection() {
+  const [githubData, setGithubData] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  const currentProjects = [
+    {
+      name: "AI Accountability Bot",
+      description: "Empathetic AI bot based on Atomic Habits principles to help users build better habits",
+      status: "In Progress",
+      progress: 65,
+      tech: ["Python", "OpenAI API", "FastAPI"],
+      color: "bg-red-600",
+    },
+    {
+      name: "AI Microlearning App",
+      description: "Bite-sized learning content delivered through AI-powered personalization",
+      status: "Planning",
+      progress: 25,
+      tech: ["Next.js", "OpenAI API", "Supabase"],
+      color: "bg-blue-600",
+    },
+    {
+      name: "Blogs Backend",
+      description: "Backend infrastructure for the personal website blog system",
+      status: "In Progress",
+      progress: 40,
+      tech: ["Node.js", "MongoDB", "Express"],
+      color: "bg-yellow-500",
+    },
+    {
+      name: "Email Summarization Automation",
+      description: "AI-powered tool to automatically summarize and categorize emails",
+      status: "Planning",
+      progress: 15,
+      tech: ["Python", "Gmail API", "OpenAI API"],
+      color: "bg-black",
+    },
+    {
+      name: "Careers AI Bot",
+      description: "Daily AI bot that introduces users to one new career path with detailed insights",
+      status: "Ideation",
+      progress: 10,
+      tech: ["Python", "OpenAI API", "Telegram Bot"],
+      color: "bg-red-600",
+    },
+  ]
+
+  useEffect(() => {
+    const fetchGithubData = async () => {
+      try {
+        const response = await fetch("https://api.github.com/users/Vaibhavi15/events?per_page=100")
+        const events = await response.json()
+
+        // Process events to create contribution data starting from June 2025
+        const contributionData = processGithubEvents(events)
+        setGithubData(contributionData)
+      } catch (error) {
+        console.error("Error fetching GitHub data:", error)
+        // Fallback to mock data
+        setGithubData(generateMockContributions())
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchGithubData()
+  }, [])
+
+  const processGithubEvents = (events) => {
+    const contributions = {}
+    const startDate = new Date("2025-06-01")
+    const endDate = new Date("2025-12-31")
+
+    // Initialize all dates with 0 contributions
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split("T")[0]
+      contributions[dateStr] = 0
+    }
+
+    // Count contributions from events
+    events.forEach((event) => {
+      const eventDate = new Date(event.created_at).toISOString().split("T")[0]
+      if (contributions.hasOwnProperty(eventDate)) {
+        if (event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent") {
+          contributions[eventDate]++
+        }
+      }
+    })
+
+    return contributions
+  }
+
+  const generateMockContributions = () => {
+    const contributions = {}
+    const startDate = new Date("2025-06-01")
+    const endDate = new Date("2025-12-31")
+
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split("T")[0]
+      // Generate random contributions (0-4) with higher probability for weekdays
+      const isWeekend = d.getDay() === 0 || d.getDay() === 6
+      const maxContributions = isWeekend ? 2 : 4
+      contributions[dateStr] = Math.floor(Math.random() * (maxContributions + 1))
+    }
+
+    return contributions
+  }
+
+  const getContributionColor = (count) => {
+    if (count === 0) return "bg-gray-100 border-gray-200"
+    if (count === 1) return "bg-yellow-200 border-yellow-300"
+    if (count === 2) return "bg-yellow-500 border-yellow-600"
+    if (count === 3) return "bg-red-500 border-red-600"
+    return "bg-red-600 border-red-700"
+  }
+
+  const renderContributionGraph = () => {
+    if (!githubData) return null
+
+    const months = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+
+    // Group contributions by week
+    const weeks = []
+    const startDate = new Date("2025-06-01")
+
+    // Find the first Sunday
+    const firstSunday = new Date(startDate)
+    firstSunday.setDate(startDate.getDate() - startDate.getDay())
+
+    const currentDate = new Date(firstSunday)
+    const endDate = new Date("2025-12-31")
+
+    while (currentDate <= endDate) {
+      const week = []
+      for (let i = 0; i < 7; i++) {
+        const dateStr = currentDate.toISOString().split("T")[0]
+        const count = githubData[dateStr] || 0
+        week.push({ date: dateStr, count, day: currentDate.getDay() })
+        currentDate.setDate(currentDate.getDate() + 1)
+      }
+      weeks.push(week)
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <div className="min-w-[600px]">
+          {/* Month labels */}
+          <div className="flex mb-2 ml-8">
+            {months.map((month, index) => (
+              <div key={month} className="text-xs font-mono w-[85px] text-center">
+                {month}
+              </div>
+            ))}
+          </div>
+
+          {/* Days and contribution squares */}
+          <div className="flex">
+            {/* Day labels */}
+            <div className="flex flex-col mr-2">
+              {days.map((day, index) => (
+                <div key={day} className="h-3 text-xs font-mono flex items-center" style={{ marginBottom: "2px" }}>
+                  {index % 2 === 1 ? day.slice(0, 3) : ""}
+                </div>
+              ))}
+            </div>
+
+            {/* Contribution grid */}
+            <div className="flex">
+              {weeks.map((week, weekIndex) => (
+                <div key={weekIndex} className="flex flex-col mr-1">
+                  {week.map((day, dayIndex) => (
+                    <div
+                      key={day.date}
+                      className={`w-3 h-3 border ${getContributionColor(day.count)} mb-[2px]`}
+                      title={`${day.date}: ${day.count} contributions`}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const totalContributions = githubData ? Object.values(githubData).reduce((sum, count) => sum + count, 0) : 0
+
+  return (
+    <div className="space-y-8">
+      {/* GitHub Contributions */}
+      <div className="bg-white border-4 border-black p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-bold">GITHUB CONTRIBUTIONS</h3>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <GitCommit className="h-5 w-5" />
+              <span className="font-mono">{totalContributions} contributions</span>
+            </div>
+            <a
+              href="https://github.com/Vaibhavi15"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-black text-white border-2 border-black px-3 py-1 font-bold text-sm hover:bg-gray-800 transition-colors"
+            >
+              VIEW PROFILE
+            </a>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center h-32">
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : (
+          <>
+            {renderContributionGraph()}
+            <div className="flex justify-between items-center mt-4">
+              <div className="text-xs font-mono text-gray-600">June - December 2025</div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono">Less</span>
+                <div className="flex gap-1">
+                  <div className="w-3 h-3 bg-gray-100 border border-gray-200"></div>
+                  <div className="w-3 h-3 bg-yellow-200 border border-yellow-300"></div>
+                  <div className="w-3 h-3 bg-yellow-500 border border-yellow-600"></div>
+                  <div className="w-3 h-3 bg-red-500 border border-red-600"></div>
+                  <div className="w-3 h-3 bg-red-600 border border-red-700"></div>
+                </div>
+                <span className="text-xs font-mono">More</span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Current Projects */}
+      <div>
+        <h3 className="text-xl font-bold mb-6 border-b-2 border-black pb-2">CURRENT PROJECTS</h3>
+        <div className="grid gap-6">
+          {currentProjects.map((project, index) => (
+            <div key={index} className="bg-white border-4 border-black p-6 shadow-brutal">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h4 className="font-bold text-lg">{project.name}</h4>
+                    <span
+                      className={`px-2 py-1 text-xs font-bold border-2 border-black ${
+                        project.status === "In Progress"
+                          ? "bg-yellow-500"
+                          : project.status === "Planning"
+                            ? "bg-blue-600 text-white"
+                            : "bg-gray-200"
+                      }`}
+                    >
+                      {project.status}
+                    </span>
+                  </div>
+                  <p className="font-mono text-sm mb-3">{project.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {project.tech.map((tech, techIndex) => (
+                      <span key={techIndex} className="bg-gray-100 border border-black px-2 py-1 text-xs font-mono">
+                        {tech}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="ml-4 text-right">
+                  <div className="text-2xl font-black">{project.progress}%</div>
+                  <div className="w-20 bg-gray-200 h-3 border-2 border-black mt-1">
+                    <div className={`${project.color} h-full`} style={{ width: `${project.progress}%` }}></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Coding Stats */}
+      <div className="grid md:grid-cols-3 gap-6">
+        <div className="bg-black text-white border-4 border-black p-6">
+          <h3 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">ACTIVE PROJECTS</h3>
+          <div className="text-center">
+            <div className="text-5xl font-black">{currentProjects.length}</div>
+            <p className="font-mono mt-1">Projects in development</p>
+          </div>
+        </div>
+
+        <div className="bg-red-600 text-white border-4 border-black p-6">
+          <h3 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">LANGUAGES</h3>
+          <div className="space-y-2 font-mono text-sm">
+            <div className="flex justify-between">
+              <span>Python</span>
+              <span>60%</span>
+            </div>
+            <div className="flex justify-between">
+              <span>JavaScript</span>
+              <span>25%</span>
+            </div>
+            <div className="flex justify-between">
+              <span>TypeScript</span>
+              <span>15%</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-blue-600 text-white border-4 border-black p-6">
+          <h3 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">FOCUS AREAS</h3>
+          <ul className="space-y-2 font-mono text-sm">
+            <li>• AI/ML Applications</li>
+            <li>• Web Development</li>
+            <li>• API Integration</li>
+            <li>• Automation Tools</li>
+          </ul>
+        </div>
+      </div>
+
+      <div className="flex justify-center mt-8">
+        <a
+          href="https://github.com/Vaibhavi15"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-black text-white border-4 border-black px-6 py-3 font-bold text-lg shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-flex items-center gap-2"
+        >
+          VIEW ALL REPOSITORIES <ArrowRight className="h-5 w-5" />
+        </a>
+      </div>
+    </div>
+  )
+}
+
 function BooksSection() {
-  // Sample data
-  const booksRead = 4
+  const { books, loading, error } = useBooks()
+
+  if (error) {
+    return (
+      <div className="bg-red-600 text-white border-4 border-black p-6">
+        <p className="font-mono">Failed to load books: {error}</p>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  const currentlyReading = books.filter((book) => book.status === "reading")
+  const recentlyCompleted = books.filter((book) => book.status === "completed").slice(0, 4)
+  const booksRead = books.filter((book) => book.status === "completed").length
   const booksGoal = 12
-  const currentlyReading = [
-    { title: "Made to Stick", author: "Dan and Chip Heath", progress: 65 },
-    { title: "The Book of Clarity", author: "Paras Chopra", progress: 15 },
-  ]
-  const recentlyCompleted = [
-    { title: "Contagious", author: "Jonah Berger", rating: 3, date: "May 10, 2025", genre: "Marketing" },
-    { title: "Hacking Health", author: "Mukesh Bansal", rating: 3, date: "April 22, 2025", genre: "Health" },
-    { title: "Mahabharata Unravelled", author: "Ami Ganatra", rating: 4, date: "April 5, 2025", genre: "History" },
-    { title: "The Mom Test", author: "Rob Fitzpatrick", rating: 4, date: "March 18, 2025", genre: "Business" },
-  ]
-  const genreBreakdown = [
-    { genre: "Business", count: 2, color: "bg-red-600" },
-    { genre: "Marketing", count: 1, color: "bg-blue-600" },
-    { genre: "Health", count: 1, color: "bg-yellow-500" },
-    { genre: "History", count: 1, color: "bg-black" },
-  ]
+
+  // Calculate genre breakdown
+  const genreCount = books.reduce((acc, book) => {
+    if (book.status === "completed") {
+      acc[book.genre] = (acc[book.genre] || 0) + 1
+    }
+    return acc
+  }, {})
+
+  const genreBreakdown = Object.entries(genreCount).map(([genre, count], index) => ({
+    genre: genre.charAt(0).toUpperCase() + genre.slice(1),
+    count,
+    color: ["bg-red-600", "bg-blue-600", "bg-yellow-500", "bg-black"][index % 4],
+  }))
 
   return (
     <div className="space-y-8">
@@ -229,8 +580,8 @@ function BooksSection() {
         <div className="bg-white border-4 border-black p-6 col-span-2">
           <h3 className="text-xl font-bold mb-4">CURRENTLY READING</h3>
           <div className="space-y-4">
-            {currentlyReading.map((book, index) => (
-              <div key={index} className="border-2 border-black p-4">
+            {currentlyReading.map((book) => (
+              <div key={book.id} className="border-2 border-black p-4">
                 <h4 className="font-bold">{book.title}</h4>
                 <p className="text-sm font-mono mb-2">by {book.author}</p>
                 <div className="flex items-center gap-2">
@@ -249,23 +600,29 @@ function BooksSection() {
         <div className="md:col-span-2">
           <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">RECENTLY COMPLETED</h3>
           <div className="grid sm:grid-cols-2 gap-4">
-            {recentlyCompleted.map((book, index) => (
-              <div key={index} className="bg-white border-4 border-black p-4 shadow-brutal">
+            {recentlyCompleted.map((book) => (
+              <div key={book.id} className="bg-white border-4 border-black p-4 shadow-brutal">
                 <div className="flex justify-between items-start">
                   <h4 className="font-bold">{book.title}</h4>
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${i < book.rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
-                      />
-                    ))}
-                  </div>
+                  {book.rating && (
+                    <div className="flex">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-4 w-4 ${i < book.rating! ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
+                        />
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <p className="text-sm font-mono mb-2">by {book.author}</p>
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-xs font-mono bg-gray-100 px-2 py-1 border border-black">{book.genre}</span>
-                  <span className="text-xs font-mono">{book.date}</span>
+                  <span className="text-xs font-mono bg-gray-100 px-2 py-1 border border-black">
+                    {book.genre.charAt(0).toUpperCase() + book.genre.slice(1)}
+                  </span>
+                  {book.completed_date && (
+                    <span className="text-xs font-mono">{new Date(book.completed_date).toLocaleDateString()}</span>
+                  )}
                 </div>
               </div>
             ))}
@@ -305,12 +662,35 @@ function BooksSection() {
 }
 
 function FitnessSection() {
-  // Sample data for workout types
+  const { sessions, loading, error } = useWorkoutSessions()
+
+  if (error) {
+    return (
+      <div className="bg-red-600 text-white border-4 border-black p-6">
+        <p className="font-mono">Failed to load workout data: {error}</p>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-32">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  // Calculate workout type breakdown
+  const workoutTypeCount = sessions.reduce((acc, session) => {
+    acc[session.workout_type] = (acc[session.workout_type] || 0) + (session.duration_minutes || 0)
+    return acc
+  }, {})
+
   const workoutTypes = [
-    { type: "Strength", hours: 12, color: "bg-blue-600" },
-    { type: "Cardio", hours: 8, color: "bg-red-600" },
-    { type: "Yoga", hours: 5, color: "bg-yellow-500" },
-    { type: "HIIT", hours: 3, color: "bg-black" },
+    { type: "Strength", hours: Math.round((workoutTypeCount.strength || 0) / 60), color: "bg-blue-600" },
+    { type: "Cardio", hours: Math.round((workoutTypeCount.cardio || 0) / 60), color: "bg-red-600" },
+    { type: "Yoga", hours: Math.round((workoutTypeCount.yoga || 0) / 60), color: "bg-yellow-500" },
+    { type: "HIIT", hours: Math.round((workoutTypeCount.hiit || 0) / 60), color: "bg-black" },
   ]
 
   const personalBests = [
@@ -326,66 +706,32 @@ function FitnessSection() {
   // Months (starting from May 2025)
   const months = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-  // Generate workout data with specific workout types
-  // 0 = no workout, 1 = Cardio, 2 = HIIT, 3 = Strength, 4 = Yoga
-  const workoutData = {
-    // May 2025 (with 3 random days per week with Cardio and HIIT until May 22)
-    May: [
-      // Week 1 (May 1-4)
-      [0, 0, 1, 0, 2, 0, 0], // May 1-4 (Thu, Fri)
-      // Week 2 (May 5-11)
-      [1, 0, 0, 2, 0, 1, 0], // May 5-11 (Mon, Thu, Sat)
-      // Week 3 (May 12-18)
-      [0, 2, 0, 0, 1, 0, 2], // May 12-18 (Tue, Fri, Sun)
-      // Week 4 (May 19-25) - only until May 22
-      [1, 0, 2, 0, 0, 0, 0], // May 19-22 (Mon, Wed)
-      // Week 5 (May 26-31)
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    // Future months (mostly empty)
-    Jun: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Jul: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Aug: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Sep: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Oct: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Nov: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Dec: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-  }
+  // Create workout data from sessions
+  const workoutData = {}
+  months.forEach((month) => {
+    workoutData[month] = Array(5)
+      .fill(null)
+      .map(() => Array(7).fill(0))
+  })
+
+  // Populate with actual session data
+  sessions.forEach((session) => {
+    const sessionDate = new Date(session.date)
+    const monthName = sessionDate.toLocaleDateString("en-US", { month: "short" })
+
+    if (workoutData[monthName]) {
+      const workoutTypeMap = { cardio: 1, hiit: 2, strength: 3, yoga: 4 }
+      const workoutTypeValue = workoutTypeMap[session.workout_type] || 0
+
+      // Calculate week and day indices (simplified)
+      const dayOfWeek = sessionDate.getDay()
+      const weekOfMonth = Math.floor(sessionDate.getDate() / 7)
+
+      if (workoutData[monthName][weekOfMonth] && workoutData[monthName][weekOfMonth][dayOfWeek] !== undefined) {
+        workoutData[monthName][weekOfMonth][dayOfWeek] = workoutTypeValue
+      }
+    }
+  })
 
   // Helper function to get color class based on workout type
   const getWorkoutTypeColor = (type) => {
@@ -428,23 +774,27 @@ function FitnessSection() {
                   <div className="w-[80px] font-bold text-sm">{day}</div>
                   <div className="flex">
                     {Object.keys(workoutData).map((month) =>
-                      workoutData[month].map((week, weekIndex) => (
-                        <div
-                          key={`${month}-${weekIndex}-${dayIndex}`}
-                          className={`w-6 h-6 border mx-[1px] ${getWorkoutTypeColor(week[dayIndex])}`}
-                          title={`${day}, Week ${weekIndex + 1} of ${month}: ${
-                            week[dayIndex] === 1
-                              ? "Cardio"
-                              : week[dayIndex] === 2
-                                ? "HIIT"
-                                : week[dayIndex] === 3
-                                  ? "Strength"
-                                  : week[dayIndex] === 4
-                                    ? "Yoga"
-                                    : "No workout"
-                          }`}
-                        ></div>
-                      )),
+                      workoutData[month].map((week, weekIndex) => {
+                        const workoutType = week[dayIndex]
+                        const workoutName =
+                          workoutType === 1
+                            ? "Cardio"
+                            : workoutType === 2
+                              ? "HIIT"
+                              : workoutType === 3
+                                ? "Strength"
+                                : workoutType === 4
+                                  ? "Yoga"
+                                  : "No workout"
+
+                        return (
+                          <div
+                            key={`${month}-${weekIndex}-${dayIndex}`}
+                            className={`w-6 h-6 border mx-[1px] ${getWorkoutTypeColor(workoutType)}`}
+                            title={`${month} Week ${weekIndex + 1}: ${workoutName}`}
+                          ></div>
+                        )
+                      }),
                     )}
                   </div>
                 </div>
@@ -697,162 +1047,6 @@ function ScubaSection() {
       </div>
 
       <div className="mt-8"></div>
-    </div>
-  )
-}
-
-function CookingSection() {
-  // Sample data
-  const totalRecipes = 48
-  const recipesThisYear = 15
-
-  const cuisineExplored = [
-    { cuisine: "Indian", recipes: 12, color: "bg-red-600" },
-    { cuisine: "Italian", recipes: 8, color: "bg-blue-600" },
-    { cuisine: "Japanese", recipes: 6, color: "bg-yellow-500" },
-    { cuisine: "Mexican", recipes: 5, color: "bg-black" },
-    { cuisine: "Thai", recipes: 4, color: "bg-green-500" },
-  ]
-
-  const recentRecipes = [
-    {
-      name: "Airfried Corn Pakoda",
-      cuisine: "Indian",
-      difficulty: "Beginner",
-      date: "May 2025",
-      rating: 3,
-      image: "/corn-pakoda.png",
-      url: "https://masalachilli.com/corn-pakoda-air-fryer-sweet-corn-pakora/",
-    },
-    {
-      name: "Kabuli Channa Chat",
-      cuisine: "Indian",
-      difficulty: "Intermediate",
-      date: "April 2025",
-      rating: 4,
-      image: "/kabuli-channa-chat.png",
-      url: "https://www.facebook.com/share/v/1A6b1yHGKR/",
-    },
-    {
-      name: "Dahi Papdi Chat Platter",
-      cuisine: "Indian",
-      difficulty: "Intermediate",
-      date: "February 2025",
-      rating: 4,
-      image: "/dahi-papdi-chat.png",
-      url: "https://www.instagram.com/reel/C1JlZcAI5cz/?igsh=bmNmbWZtbzBqbGpm",
-    },
-  ]
-
-  const skillLevels = [
-    { skill: "Knife Skills", level: 80, color: "bg-red-600" },
-    { skill: "Baking", level: 65, color: "bg-blue-600" },
-    { skill: "Fermentation", level: 50, color: "bg-yellow-500" },
-    { skill: "Plating", level: 40, color: "bg-black" },
-  ]
-
-  return (
-    <div className="space-y-8">
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-black text-white border-4 border-black p-6">
-          <h3 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">COOKING STATS</h3>
-          <div className="space-y-4">
-            <div className="bg-white text-black border-2 border-white p-4">
-              <div className="text-center">
-                <div className="text-5xl font-black">{totalRecipes}</div>
-                <p className="font-mono mt-1">Total Recipes Tried</p>
-              </div>
-            </div>
-            <div className="bg-white text-black border-2 border-white p-4">
-              <div className="text-center">
-                <div className="text-5xl font-black">{recipesThisYear}</div>
-                <p className="font-mono mt-1">New Recipes in 2025</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="md:col-span-2">
-          <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">RECENT CREATIONS</h3>
-          <div className="grid sm:grid-cols-3 gap-4">
-            {recentRecipes.map((recipe, index) => (
-              <a
-                key={index}
-                href={recipe.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-white border-4 border-black p-4 shadow-brutal hover:translate-y-1 hover:shadow-none transition-all"
-              >
-                <div className="aspect-video bg-gray-200 mb-3 border-2 border-black overflow-hidden">
-                  <img
-                    src={recipe.image || "/placeholder.svg"}
-                    alt={recipe.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <h4 className="font-bold">{recipe.name}</h4>
-                <div className="flex justify-between items-center mt-1 mb-2">
-                  <span className="text-xs font-mono bg-gray-100 px-2 py-1 border border-black">{recipe.cuisine}</span>
-                  <div className="flex">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-3 w-3 ${i < recipe.rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="flex justify-between items-center text-xs font-mono">
-                  <span>{recipe.difficulty}</span>
-                  <span>{recipe.date}</span>
-                </div>
-              </a>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white border-4 border-black p-6">
-        <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">COOKING GOALS</h3>
-        <div className="grid md:grid-cols-3 gap-4">
-          <div className="border-2 border-black p-4">
-            <h4 className="font-bold">Master Airfrying</h4>
-            <p className="font-mono text-sm mt-2">
-              Perfect the art of airfrying different snacks and meals for healthier cooking alternatives.
-            </p>
-            <div className="mt-3 bg-gray-200 h-4 border-2 border-black">
-              <div className="bg-yellow-500 h-full" style={{ width: "45%" }}></div>
-            </div>
-          </div>
-          <div className="border-2 border-black p-4">
-            <h4 className="font-bold">Learn More Konkani Recipes</h4>
-            <p className="font-mono text-sm mt-2">
-              Preserve and master traditional heirloom recipes from Konkani cuisine.
-            </p>
-            <div className="mt-3 bg-gray-200 h-4 border-2 border-black">
-              <div className="bg-red-600 h-full" style={{ width: "30%" }}></div>
-            </div>
-          </div>
-          <div className="border-2 border-black p-4">
-            <h4 className="font-bold">Fermentation Projects</h4>
-            <p className="font-mono text-sm mt-2">
-              Make curd, cheese, ghee and buttermilk at home using traditional fermentation techniques.
-            </p>
-            <div className="mt-3 bg-gray-200 h-4 border-2 border-black">
-              <div className="bg-blue-600 h-full" style={{ width: "25%" }}></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex justify-center mt-8">
-        <a
-          href="#"
-          className="bg-black text-white border-4 border-black px-6 py-3 font-bold text-lg shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-flex items-center gap-2"
-        >
-          VIEW FULL RECIPE COLLECTION <ArrowRight className="h-5 w-5" />
-        </a>
-      </div>
     </div>
   )
 }
