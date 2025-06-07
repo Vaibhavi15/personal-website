@@ -61,7 +61,7 @@ export default function OpenPage() {
               <div className="flex flex-wrap gap-4 items-center mb-8">
                 <div className="flex items-center gap-2 bg-yellow-500 px-3 py-1 border-2 border-black">
                   <Calendar className="h-5 w-5" />
-                  <span className="font-bold">Last updated: {new Date().toLocaleDateString()}</span>
+                  <span className="font-bold">Last updated: June 7, 2025</span>
                 </div>
                 <div className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1 border-2 border-black">
                   <Clock className="h-5 w-5" />
@@ -333,9 +333,14 @@ function CodeSection() {
     console.log("🔄 Processing GitHub events...")
 
     const contributions = {}
-    const currentDate = new Date() // Current date in user's timezone
+    // Use the actual current date in the user's timezone
+    const currentDate = new Date()
     const startDate = new Date("2025-06-01")
-    const endDate = new Date("2025-12-31")
+    // Set end date to be at least 6 months from current date or end of year, whichever is later
+    const endOfYear = new Date(currentDate.getFullYear(), 11, 31) // December 31st of current year
+    const sixMonthsFromNow = new Date(currentDate)
+    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
+    const endDate = sixMonthsFromNow > endOfYear ? sixMonthsFromNow : endOfYear
 
     console.log("📅 Target date range:", {
       start: startDate.toISOString().split("T")[0],
@@ -344,7 +349,7 @@ function CodeSection() {
       userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     })
 
-    // Initialize all dates with 0 contributions
+    // Initialize all dates with 0 contributions (including current date)
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split("T")[0]
       contributions[dateStr] = 0
@@ -412,8 +417,13 @@ function CodeSection() {
     console.log("🎭 Generating mock contribution data...")
 
     const contributions = {}
+    const currentDate = new Date()
     const startDate = new Date("2025-06-01")
-    const endDate = new Date("2025-12-31")
+    // Use the same end date logic as the real data processing
+    const endOfYear = new Date(currentDate.getFullYear(), 11, 31)
+    const sixMonthsFromNow = new Date(currentDate)
+    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
+    const endDate = sixMonthsFromNow > endOfYear ? sixMonthsFromNow : endOfYear
 
     // Create a pattern of activity (more active on weekdays)
     const activityPattern = [
@@ -447,6 +457,11 @@ function CodeSection() {
       totalDays: Object.keys(contributions).length,
       totalContributions,
       activeDays: Object.values(contributions).filter((count) => count > 0).length,
+      dateRange: {
+        start: startDate.toISOString().split("T")[0],
+        end: endDate.toISOString().split("T")[0],
+        current: currentDate.toISOString().split("T")[0],
+      },
     })
 
     return contributions
@@ -463,27 +478,43 @@ function CodeSection() {
   const renderContributionGraph = () => {
     if (!githubData) return null
 
-    const months = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const currentDate = new Date()
+    const currentMonth = currentDate.getMonth() // 0-11
+    const currentYear = currentDate.getFullYear()
+
+    // Generate month labels starting from June or current month, whichever is appropriate
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const startMonthIndex = Math.max(5, currentMonth) // June (5) or current month
+    const months = []
+
+    for (let i = 0; i < 7; i++) {
+      const monthIndex = (startMonthIndex + i) % 12
+      months.push(monthNames[monthIndex])
+    }
+
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
     // Group contributions by week
     const weeks = []
-    const startDate = new Date("2025-06-01")
+    const startDate = new Date(Math.max(new Date("2025-06-01"), new Date(currentYear, currentMonth, 1)))
 
     // Find the first Sunday
     const firstSunday = new Date(startDate)
     firstSunday.setDate(startDate.getDate() - startDate.getDay())
 
-    const currentDate = new Date(firstSunday)
-    const endDate = new Date("2025-12-31")
+    const iterDate = new Date(firstSunday)
+    const endOfYear = new Date(currentDate.getFullYear(), 11, 31)
+    const sixMonthsFromNow = new Date(currentDate)
+    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
+    const endDate = sixMonthsFromNow > endOfYear ? sixMonthsFromNow : endOfYear
 
-    while (currentDate <= endDate) {
+    while (iterDate <= endDate) {
       const week = []
       for (let i = 0; i < 7; i++) {
-        const dateStr = currentDate.toISOString().split("T")[0]
+        const dateStr = iterDate.toISOString().split("T")[0]
         const count = githubData[dateStr] || 0
-        week.push({ date: dateStr, count, day: currentDate.getDay() })
-        currentDate.setDate(currentDate.getDate() + 1)
+        week.push({ date: dateStr, count, day: iterDate.getDay() })
+        iterDate.setDate(iterDate.getDate() + 1)
       }
       weeks.push(week)
     }
@@ -589,7 +620,13 @@ function CodeSection() {
           <>
             {renderContributionGraph()}
             <div className="flex justify-between items-center mt-4">
-              <div className="text-xs font-mono text-gray-600">June - December 2025</div>
+              <div className="text-xs font-mono text-gray-600">
+                {new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })} -
+                {new Date(new Date().setMonth(new Date().getMonth() + 6)).toLocaleDateString("en-US", {
+                  month: "short",
+                  year: "numeric",
+                })}
+              </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono">Less</span>
                 <div className="flex gap-1">
