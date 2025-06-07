@@ -93,12 +93,6 @@ export function Header() {
             {playDropdownOpen && (
               <div className="absolute top-full left-0 mt-2 bg-white border-4 border-black shadow-brutal min-w-[160px] z-50">
                 <Link
-                  href="/play/open"
-                  className="block w-full px-4 py-2 font-bold hover:bg-blue-600 hover:text-white cursor-pointer"
-                >
-                  OPEN
-                </Link>
-                <Link
                   href="/play/ahaa-ahaara"
                   className="block w-full px-4 py-2 font-bold hover:bg-blue-600 hover:text-white cursor-pointer"
                 >
@@ -116,12 +110,18 @@ export function Header() {
                 >
                   BOARDGAMES
                 </Link>
+                <Link
+                  href="/blog"
+                  className="block w-full px-4 py-2 font-bold hover:bg-blue-600 hover:text-white cursor-pointer"
+                >
+                  BLOG
+                </Link>
               </div>
             )}
           </div>
 
-          <Link href="/blog" className="text-white font-bold text-lg hover:text-yellow-500 transition-colors">
-            BLOG
+          <Link href="/play/open" className="text-white font-bold text-lg hover:text-yellow-500 transition-colors">
+            OPEN
           </Link>
 
           <Link href="/contact" className="text-white font-bold text-lg hover:text-yellow-500 transition-colors">
@@ -157,9 +157,6 @@ export function Header() {
             <div className="space-y-2">
               <div className="text-white font-bold text-lg border-b border-white pb-1">PLAY</div>
               <div className="pl-4 space-y-2">
-                <Link href="/play/open" className="block text-white hover:text-yellow-500">
-                  OPEN
-                </Link>
                 <Link href="/play/ahaa-ahaara" className="block text-white hover:text-yellow-500">
                   AHAA!AHAARA
                 </Link>
@@ -169,11 +166,14 @@ export function Header() {
                 <Link href="/play/boardgames" className="block text-white hover:text-yellow-500">
                   BOARDGAMES
                 </Link>
+                <Link href="/blog" className="block text-white hover:text-yellow-500">
+                  BLOG
+                </Link>
               </div>
             </div>
 
-            <Link href="/blog" className="block text-white font-bold text-lg hover:text-yellow-500">
-              BLOG
+            <Link href="/play/open" className="block text-white font-bold text-lg hover:text-yellow-500">
+              OPEN
             </Link>
 
             <Link href="/contact" className="block text-white font-bold text-lg hover:text-yellow-500">
