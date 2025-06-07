@@ -395,32 +395,44 @@ function CodeSection() {
         totalDays: githubDates.length,
       })
 
-      // Calculate how many days to shift to map the latest GitHub date to current date
-      const daysDiff = Math.floor((currentDate - latestGithubDate) / (1000 * 60 * 60 * 24))
-      console.log("📊 Days to shift events forward:", daysDiff)
+      // Calculate the span of GitHub events in days
+      const githubSpanDays = Math.ceil((latestGithubDate - earliestGithubDate) / (1000 * 60 * 60 * 24)) + 1
+      const targetSpanDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1
+
+      console.log("📊 Mapping strategy:", {
+        githubSpanDays,
+        targetSpanDays,
+        strategy: "proportional mapping from GitHub timeline to target timeline",
+      })
 
       let mappedDates = 0
       let totalValidEvents = 0
 
-      // Map each date's events to the shifted timeline
+      // Map each GitHub date proportionally to our target timeline
       Object.entries(eventsByDate).forEach(([originalDateStr, dateEvents]) => {
         const originalDate = new Date(originalDateStr)
-        const shiftedDate = new Date(originalDate)
-        shiftedDate.setDate(shiftedDate.getDate() + daysDiff)
 
-        const shiftedDateStr = shiftedDate.toISOString().split("T")[0]
+        // Calculate the position of this date within the GitHub timeline (0 to 1)
+        const positionInGithubTimeline = (originalDate - earliestGithubDate) / (latestGithubDate - earliestGithubDate)
 
-        if (contributions.hasOwnProperty(shiftedDateStr)) {
-          // Count valid contribution events for this date
-          const validEvents = dateEvents.filter(
-            (event) => event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent",
-          )
+        // Map this position to our target timeline
+        const targetTimelinePosition = positionInGithubTimeline * (endDate - startDate)
+        const mappedDate = new Date(startDate.getTime() + targetTimelinePosition)
+        const mappedDateStr = mappedDate.toISOString().split("T")[0]
 
-          contributions[shiftedDateStr] = validEvents.length
+        // Count valid contribution events for this date
+        const validEvents = dateEvents.filter(
+          (event) => event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent",
+        )
+
+        // Only map if the target date is within our contributions object
+        if (contributions.hasOwnProperty(mappedDateStr)) {
+          contributions[mappedDateStr] += validEvents.length
           totalValidEvents += validEvents.length
           mappedDates++
 
-          console.log(`🔄 Mapped ${originalDateStr} → ${shiftedDateStr}:`, {
+          console.log(`🔄 Mapped ${originalDateStr} → ${mappedDateStr}:`, {
+            positionInGithubTimeline: Math.round(positionInGithubTimeline * 100) + "%",
             totalEvents: dateEvents.length,
             validEvents: validEvents.length,
             eventTypes: dateEvents.reduce((acc, e) => {
@@ -428,6 +440,8 @@ function CodeSection() {
               return acc
             }, {}),
           })
+        } else {
+          console.log(`⚠️ Skipped ${originalDateStr} → ${mappedDateStr}: target date outside range`)
         }
       })
 
