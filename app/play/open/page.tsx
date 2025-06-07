@@ -195,6 +195,23 @@ function CodeSection() {
   const [githubData, setGithubData] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 640)
+    }
+
+    // Initial check
+    checkMobile()
+
+    // Add event listener
+    window.addEventListener("resize", checkMobile)
+
+    // Cleanup
+    return () => window.removeEventListener("resize", checkMobile)
+  }, [])
+
   const currentProjects = [
     {
       name: "AI Accountability Bot",
@@ -310,7 +327,12 @@ function CodeSection() {
   const renderContributionGraph = () => {
     if (!githubData) return null
 
-    const months = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    // For mobile, we'll show a simplified version with fewer columns
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 640
+
+    // Select fewer months to display on mobile
+    const months = isMobile ? ["Jun", "Jul", "Aug"] : ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
     // Group contributions by week
@@ -324,7 +346,11 @@ function CodeSection() {
     const currentDate = new Date(firstSunday)
     const endDate = new Date("2025-12-31")
 
-    while (currentDate <= endDate) {
+    // Limit weeks for mobile
+    const maxWeeks = isMobile ? 8 : 30
+    let weekCount = 0
+
+    while (currentDate <= endDate && weekCount < maxWeeks) {
       const week = []
       for (let i = 0; i < 7; i++) {
         const dateStr = currentDate.toISOString().split("T")[0]
@@ -333,15 +359,16 @@ function CodeSection() {
         currentDate.setDate(currentDate.getDate() + 1)
       }
       weeks.push(week)
+      weekCount++
     }
 
     return (
       <div className="overflow-x-auto">
-        <div className="min-w-[600px]">
+        <div className={`${isMobile ? "min-w-full" : "min-w-[600px]"}`}>
           {/* Month labels */}
           <div className="flex mb-2 ml-8">
             {months.map((month, index) => (
-              <div key={month} className="text-xs font-mono w-[85px] text-center">
+              <div key={month} className={`text-xs font-mono ${isMobile ? "w-[40px]" : "w-[85px]"} text-center`}>
                 {month}
               </div>
             ))}
@@ -360,12 +387,12 @@ function CodeSection() {
 
             {/* Contribution grid */}
             <div className="flex">
-              {weeks.map((week, weekIndex) => (
+              {weeks.slice(0, isMobile ? 8 : weeks.length).map((week, weekIndex) => (
                 <div key={weekIndex} className="flex flex-col mr-1">
                   {week.map((day, dayIndex) => (
                     <div
                       key={day.date}
-                      className={`w-3 h-3 border ${getContributionColor(day.count)} mb-[2px]`}
+                      className={`${isMobile ? "w-2 h-2" : "w-3 h-3"} border ${getContributionColor(day.count)} mb-[2px]`}
                       title={`${day.date}: ${day.count} contributions`}
                     />
                   ))}
@@ -383,19 +410,19 @@ function CodeSection() {
   return (
     <div className="space-y-8">
       {/* GitHub Contributions */}
-      <div className="bg-white border-4 border-black p-6">
-        <div className="flex justify-between items-center mb-6">
+      <div className="bg-white border-4 border-black p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 gap-2">
           <h3 className="text-xl font-bold">GITHUB CONTRIBUTIONS</h3>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="flex items-center gap-2">
-              <GitCommit className="h-5 w-5" />
-              <span className="font-mono">{totalContributions} contributions</span>
+              <GitCommit className="h-4 w-4 sm:h-5 sm:w-5" />
+              <span className="font-mono text-sm sm:text-base">{totalContributions} contributions</span>
             </div>
             <a
               href="https://github.com/Vaibhavi15"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-black text-white border-2 border-black px-3 py-1 font-bold text-sm hover:bg-gray-800 transition-colors"
+              className="bg-black text-white border-2 border-black px-2 py-1 sm:px-3 sm:py-1 font-bold text-xs sm:text-sm hover:bg-gray-800 transition-colors"
             >
               VIEW PROFILE
             </a>
@@ -411,14 +438,14 @@ function CodeSection() {
             {renderContributionGraph()}
             <div className="flex justify-between items-center mt-4">
               <div className="text-xs font-mono text-gray-600">June - December 2025</div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <span className="text-xs font-mono">Less</span>
                 <div className="flex gap-1">
-                  <div className="w-3 h-3 bg-gray-100 border border-gray-200"></div>
-                  <div className="w-3 h-3 bg-yellow-200 border border-yellow-300"></div>
-                  <div className="w-3 h-3 bg-yellow-500 border border-yellow-600"></div>
-                  <div className="w-3 h-3 bg-red-500 border border-red-600"></div>
-                  <div className="w-3 h-3 bg-red-600 border border-red-700"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-gray-100 border border-gray-200"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-200 border border-yellow-300"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-500 border border-yellow-600"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 border border-red-600"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-600 border border-red-700"></div>
                 </div>
                 <span className="text-xs font-mono">More</span>
               </div>
@@ -429,13 +456,13 @@ function CodeSection() {
 
       {/* Current Projects */}
       <div>
-        <h3 className="text-xl font-bold mb-6 border-b-2 border-black pb-2">CURRENT PROJECTS</h3>
-        <div className="grid gap-6">
+        <h3 className="text-xl font-bold mb-4 sm:mb-6 border-b-2 border-black pb-2">CURRENT PROJECTS</h3>
+        <div className="grid gap-4 sm:gap-6">
           {currentProjects.map((project, index) => (
-            <div key={index} className="bg-white border-4 border-black p-6 shadow-brutal">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
+            <div key={index} className="bg-white border-4 border-black p-4 sm:p-6 shadow-brutal">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-4">
+                <div className="flex-1 mb-3 sm:mb-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
                     <h4 className="font-bold text-lg">{project.name}</h4>
                     <span
                       className={`px-2 py-1 text-xs font-bold border-2 border-black ${
@@ -458,7 +485,7 @@ function CodeSection() {
                     ))}
                   </div>
                 </div>
-                <div className="ml-4 text-right">
+                <div className="sm:ml-4 text-right">
                   <div className="text-2xl font-black">{project.progress}%</div>
                   <div className="w-20 bg-gray-200 h-3 border-2 border-black mt-1">
                     <div className={`${project.color} h-full`} style={{ width: `${project.progress}%` }}></div>
@@ -471,17 +498,17 @@ function CodeSection() {
       </div>
 
       {/* Coding Stats */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-black text-white border-4 border-black p-6">
-          <h3 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">ACTIVE PROJECTS</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        <div className="bg-black text-white border-4 border-black p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 border-b-2 border-white pb-2">ACTIVE PROJECTS</h3>
           <div className="text-center">
-            <div className="text-5xl font-black">{currentProjects.length}</div>
+            <div className="text-4xl sm:text-5xl font-black">{currentProjects.length}</div>
             <p className="font-mono mt-1">Projects in development</p>
           </div>
         </div>
 
-        <div className="bg-red-600 text-white border-4 border-black p-6">
-          <h3 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">LANGUAGES</h3>
+        <div className="bg-red-600 text-white border-4 border-black p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 border-b-2 border-white pb-2">LANGUAGES</h3>
           <div className="space-y-2 font-mono text-sm">
             <div className="flex justify-between">
               <span>Python</span>
@@ -498,8 +525,8 @@ function CodeSection() {
           </div>
         </div>
 
-        <div className="bg-blue-600 text-white border-4 border-black p-6">
-          <h3 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">FOCUS AREAS</h3>
+        <div className="bg-blue-600 text-white border-4 border-black p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 border-b-2 border-white pb-2">FOCUS AREAS</h3>
           <ul className="space-y-2 font-mono text-sm">
             <li>• AI/ML Applications</li>
             <li>• Web Development</li>
