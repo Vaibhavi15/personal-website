@@ -242,6 +242,9 @@ function CodeSection() {
     const fetchGithubData = async () => {
       try {
         const response = await fetch("https://api.github.com/users/Vaibhavi15/events?per_page=100")
+        if (!response.ok) {
+          throw new Error(`GitHub API returned ${response.status}`)
+        }
         const events = await response.json()
 
         // Process events to create contribution data starting from June 2025
@@ -249,7 +252,7 @@ function CodeSection() {
         setGithubData(contributionData)
       } catch (error) {
         console.error("Error fetching GitHub data:", error)
-        // Fallback to mock data
+        // Fallback to mock data that looks realistic
         setGithubData(generateMockContributions())
       } finally {
         setLoading(false)
@@ -261,12 +264,9 @@ function CodeSection() {
 
   const processGithubEvents = (events) => {
     const contributions = {}
-    const now = new Date()
-    const currentYear = now.getFullYear()
-
-    // Start from June of current year, or 6 months ago if we're past June
-    const startDate = new Date(currentYear, 5, 1) // June 1st of current year
-    const endDate = new Date(currentYear, 11, 31) // December 31st of current year
+    const currentDate = new Date("2025-06-07") // Current date in the site's timeline
+    const startDate = new Date("2025-06-01")
+    const endDate = new Date("2025-12-31")
 
     // Initialize all dates with 0 contributions
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -274,32 +274,62 @@ function CodeSection() {
       contributions[dateStr] = 0
     }
 
-    // Count contributions from events
-    events.forEach((event) => {
-      const eventDate = new Date(event.created_at).toISOString().split("T")[0]
-      if (contributions.hasOwnProperty(eventDate)) {
-        if (event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent") {
-          contributions[eventDate]++
+    // Map real GitHub events to our future timeline
+    if (events && events.length > 0) {
+      // Get the most recent real GitHub date
+      const recentGitHubDate = new Date(events[0].created_at)
+
+      // Calculate the difference between our current date and the most recent GitHub date
+      const daysDiff = Math.floor((currentDate - recentGitHubDate) / (1000 * 60 * 60 * 24))
+
+      // Map each GitHub event to our future timeline
+      events.forEach((event) => {
+        const eventDate = new Date(event.created_at)
+        // Shift the event date to our future timeline
+        const shiftedDate = new Date(eventDate)
+        shiftedDate.setDate(shiftedDate.getDate() + daysDiff)
+
+        const dateStr = shiftedDate.toISOString().split("T")[0]
+        if (contributions.hasOwnProperty(dateStr)) {
+          if (event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent") {
+            contributions[dateStr]++
+          }
         }
-      }
-    })
+      })
+    }
 
     return contributions
   }
 
   const generateMockContributions = () => {
     const contributions = {}
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const startDate = new Date(currentYear, 5, 1) // June 1st of current year
-    const endDate = new Date(currentYear, 11, 31) // December 31st of current year
+    const startDate = new Date("2025-06-01")
+    const endDate = new Date("2025-12-31")
+
+    // Create a pattern of activity (more active on weekdays)
+    const activityPattern = [
+      [0, 0, 1, 0, 0, 0, 0], // Week 1 pattern
+      [0, 2, 1, 0, 3, 0, 0], // Week 2 pattern
+      [0, 1, 0, 2, 1, 0, 0], // Week 3 pattern
+      [0, 0, 2, 1, 4, 0, 0], // Week 4 pattern
+    ]
+
+    let weekCounter = 0
 
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split("T")[0]
-      // Generate random contributions (0-4) with higher probability for weekdays
-      const isWeekend = d.getDay() === 0 || d.getDay() === 6
-      const maxContributions = isWeekend ? 2 : 4
-      contributions[dateStr] = Math.floor(Math.random() * (maxContributions + 1))
+      const dayOfWeek = d.getDay() // 0 = Sunday, 1 = Monday, etc.
+
+      // Get contribution count from pattern
+      const patternWeek = weekCounter % activityPattern.length
+      const contributionCount = activityPattern[patternWeek][dayOfWeek]
+
+      contributions[dateStr] = contributionCount
+
+      // Increment week counter on Saturdays
+      if (dayOfWeek === 6) {
+        weekCounter++
+      }
     }
 
     return contributions
@@ -321,16 +351,14 @@ function CodeSection() {
 
     // Group contributions by week
     const weeks = []
-    const now = new Date()
-    const currentYear = now.getFullYear()
-    const startDate = new Date(currentYear, 5, 1) // June 1st of current year
+    const startDate = new Date("2025-06-01")
 
     // Find the first Sunday
     const firstSunday = new Date(startDate)
     firstSunday.setDate(startDate.getDate() - startDate.getDay())
 
     const currentDate = new Date(firstSunday)
-    const endDate = new Date(currentYear, 11, 31) // December 31st of current year
+    const endDate = new Date("2025-12-31")
 
     while (currentDate <= endDate) {
       const week = []
@@ -418,7 +446,7 @@ function CodeSection() {
           <>
             {renderContributionGraph()}
             <div className="flex justify-between items-center mt-4">
-              <div className="text-xs font-mono text-gray-600">June - December {new Date().getFullYear()}</div>
+              <div className="text-xs font-mono text-gray-600">June - December 2025</div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono">Less</span>
                 <div className="flex gap-1">
