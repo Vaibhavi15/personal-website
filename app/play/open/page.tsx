@@ -333,11 +333,9 @@ function CodeSection() {
     console.log("🔄 Processing GitHub events...")
 
     const contributions = {}
-    // Use the actual current date in the user's timezone
     const currentDate = new Date()
     const startDate = new Date("2025-06-01")
-    // Set end date to be at least 6 months from current date or end of year, whichever is later
-    const endOfYear = new Date(currentDate.getFullYear(), 11, 31) // December 31st of current year
+    const endOfYear = new Date(currentDate.getFullYear(), 11, 31)
     const sixMonthsFromNow = new Date(currentDate)
     sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
     const endDate = sixMonthsFromNow > endOfYear ? sixMonthsFromNow : endOfYear
@@ -349,7 +347,7 @@ function CodeSection() {
       userTimezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     })
 
-    // Initialize all dates with 0 contributions (including current date)
+    // Initialize all dates with 0 contributions
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split("T")[0]
       contributions[dateStr] = 0
@@ -361,49 +359,82 @@ function CodeSection() {
     if (events && events.length > 0) {
       console.log("🔄 Mapping real GitHub events to future timeline...")
 
-      // Get the most recent real GitHub date
-      const recentGitHubDate = new Date(events[0].created_at)
-      console.log("📅 Most recent GitHub event:", recentGitHubDate.toISOString())
-
-      // Calculate the difference between our current date and the most recent GitHub date
-      const daysDiff = Math.floor((currentDate - recentGitHubDate) / (1000 * 60 * 60 * 24))
-      console.log("📊 Days difference to shift events:", daysDiff)
-
-      let mappedEvents = 0
-      let validEventTypes = 0
-
-      // Map each GitHub event to our future timeline
-      events.forEach((event, index) => {
+      // Group events by date first
+      const eventsByDate = {}
+      events.forEach((event) => {
         const eventDate = new Date(event.created_at)
-        // Shift the event date to our future timeline
-        const shiftedDate = new Date(eventDate)
+        const dateStr = eventDate.toISOString().split("T")[0]
+
+        if (!eventsByDate[dateStr]) {
+          eventsByDate[dateStr] = []
+        }
+        eventsByDate[dateStr].push(event)
+      })
+
+      console.log("📊 Events grouped by date:", Object.keys(eventsByDate).length, "unique dates")
+      console.log(
+        "📊 Date breakdown:",
+        Object.entries(eventsByDate).map(([date, events]) => ({
+          date,
+          count: events.length,
+          types: events.reduce((acc, e) => {
+            acc[e.type] = (acc[e.type] || 0) + 1
+            return acc
+          }, {}),
+        })),
+      )
+
+      // Get the date range of real GitHub events
+      const githubDates = Object.keys(eventsByDate).sort()
+      const earliestGithubDate = new Date(githubDates[0])
+      const latestGithubDate = new Date(githubDates[githubDates.length - 1])
+
+      console.log("📅 GitHub event date range:", {
+        earliest: earliestGithubDate.toISOString().split("T")[0],
+        latest: latestGithubDate.toISOString().split("T")[0],
+        totalDays: githubDates.length,
+      })
+
+      // Calculate how many days to shift to map the latest GitHub date to current date
+      const daysDiff = Math.floor((currentDate - latestGithubDate) / (1000 * 60 * 60 * 24))
+      console.log("📊 Days to shift events forward:", daysDiff)
+
+      let mappedDates = 0
+      let totalValidEvents = 0
+
+      // Map each date's events to the shifted timeline
+      Object.entries(eventsByDate).forEach(([originalDateStr, dateEvents]) => {
+        const originalDate = new Date(originalDateStr)
+        const shiftedDate = new Date(originalDate)
         shiftedDate.setDate(shiftedDate.getDate() + daysDiff)
 
-        const dateStr = shiftedDate.toISOString().split("T")[0]
+        const shiftedDateStr = shiftedDate.toISOString().split("T")[0]
 
-        if (contributions.hasOwnProperty(dateStr)) {
-          if (event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent") {
-            contributions[dateStr]++
-            validEventTypes++
+        if (contributions.hasOwnProperty(shiftedDateStr)) {
+          // Count valid contribution events for this date
+          const validEvents = dateEvents.filter(
+            (event) => event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent",
+          )
 
-            if (index < 5) {
-              // Log first 5 mappings for debugging
-              console.log(`🔄 Mapped event ${index + 1}:`, {
-                originalDate: eventDate.toISOString().split("T")[0],
-                shiftedDate: dateStr,
-                type: event.type,
-                newCount: contributions[dateStr],
-              })
-            }
-          }
-          mappedEvents++
+          contributions[shiftedDateStr] = validEvents.length
+          totalValidEvents += validEvents.length
+          mappedDates++
+
+          console.log(`🔄 Mapped ${originalDateStr} → ${shiftedDateStr}:`, {
+            totalEvents: dateEvents.length,
+            validEvents: validEvents.length,
+            eventTypes: dateEvents.reduce((acc, e) => {
+              acc[e.type] = (acc[e.type] || 0) + 1
+              return acc
+            }, {}),
+          })
         }
       })
 
       console.log("✅ Event mapping completed:", {
-        totalEvents: events.length,
-        mappedEvents,
-        validEventTypes,
+        totalGithubDates: Object.keys(eventsByDate).length,
+        mappedDates,
+        totalValidEvents,
         contributionDays: Object.values(contributions).filter((count) => count > 0).length,
       })
     } else {
