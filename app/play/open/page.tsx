@@ -195,11 +195,11 @@ function CodeSection() {
 
   const currentProjects = [
     {
-      name: "AI Accountability Bot",
-      description: "Empathetic AI bot based on Atomic Habits principles to help users build better habits",
+      name: "AI Personalised Meal Planner",
+      description: "A meal-planner that suggests meals and recipes based on your diets and preferences",
       status: "In Progress",
-      progress: 65,
-      tech: ["Python", "OpenAI API", "FastAPI"],
+      progress: 85,
+      tech: ["Python", "OpenAI API", "SERP API"],
       color: "bg-red-600",
     },
     {
@@ -211,11 +211,11 @@ function CodeSection() {
       color: "bg-blue-600",
     },
     {
-      name: "Blogs Backend",
-      description: "Backend infrastructure for the personal website blog system",
+      name: "AI Accountability Bot",
+      description: "Empathetic AI bot based on Atomic Habits principles to help users build better habits",
       status: "In Progress",
-      progress: 40,
-      tech: ["Node.js", "MongoDB", "Express"],
+      progress: 10,
+      tech: ["Python", "OpenAI API", "FastAPI"],
       color: "bg-yellow-500",
     },
     {
