@@ -184,7 +184,7 @@ export default function HomePage() {
                         <Link href="/play/open?tab=scuba" className="underline hover:text-yellow-300">
                           Advanced Open Water Diver
                         </Link>{" "}
-                        – 16+ dives across diverse destinations.
+                        – 28 dives across diverse destinations.
                       </span>
                     </li>
                     <li className="flex items-start gap-3">
@@ -257,7 +257,7 @@ export default function HomePage() {
                         <div className="h-8 w-8 bg-yellow-500"></div>
                         <span className="font-bold">Scuba Dives</span>
                       </div>
-                      <span className="text-2xl font-black">19</span>
+                      <span className="text-2xl font-black">28</span>
                     </div>
                   </div>
                 </div>
@@ -272,9 +272,9 @@ export default function HomePage() {
                       <h4 className="font-bold">AI Accountability Bot</h4>
                       <p className="font-mono text-sm mt-1">Empathetic AI based on Atomic Habits principles</p>
                       <div className="mt-2 bg-gray-200 h-2 border border-black">
-                        <div className="bg-red-600 h-full" style={{ width: "65%" }}></div>
+                        <div className="bg-red-600 h-full" style={{ width: "10%" }}></div>
                       </div>
-                      <p className="text-xs font-mono mt-1 text-right">65% complete</p>
+                      <p className="text-xs font-mono mt-1 text-right">10% complete</p>
                     </div>
 
                     <div className="space-y-2 font-mono">
@@ -288,7 +288,7 @@ export default function HomePage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 bg-yellow-500"></div>
-                        <span>Planning Komodo liveaboard scuba trip</span>
+                        <span>Completed a Komodo scuba liveaboard trip</span>
                       </div>
                     </div>
                   </div>
@@ -316,7 +316,7 @@ export default function HomePage() {
                   <div className="bg-white border-4 border-black p-4">
                     <h4 className="font-bold text-lg mb-2">ADVENTURES</h4>
                     <p className="font-mono text-sm">
-                      Recent dives in Andamans, training for obstacle race, planning Indonesia trip
+                      Recent dives in Komodo & Andamans, training for obstacle race, completed scuba liveaboard in Indonesia
                     </p>
                   </div>
                 </div>

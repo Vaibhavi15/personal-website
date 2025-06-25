@@ -1,35 +1,8 @@
-"use client"
-
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { LoadingCard, LoadingGrid } from "@/components/ui/loading-spinner"
-import { useProjects } from "@/hooks/use-supabase-data"
 import Link from "next/link"
 
 export default function ProjectsPage() {
-  const { projects, loading, error } = useProjects()
-
-  if (error) {
-    return (
-      <div className="min-h-screen font-mono">
-        <div className="bg-background text-foreground min-h-screen">
-          <Header />
-          <main className="container py-12">
-            <div className="bg-red-600 text-white border-8 border-black p-8 shadow-brutal">
-              <h2 className="text-2xl font-black mb-4">ERROR</h2>
-              <p className="font-mono">Failed to load projects: {error}</p>
-            </div>
-          </main>
-          <Footer />
-        </div>
-      </div>
-    )
-  }
-
-  const featuredProject = projects.find((p) => p.is_featured)
-  const aiProjects = projects.filter((p) => p.category === "ai" && !p.is_featured)
-  const technicalProjects = projects.filter((p) => p.category === "technical")
-
   return (
     <div className="min-h-screen font-mono">
       <div className="bg-background text-foreground min-h-screen">
@@ -52,158 +25,169 @@ export default function ProjectsPage() {
 
             <div className="grid gap-8">
               {/* Featured Project */}
-              {loading ? (
-                <LoadingCard />
-              ) : featuredProject ? (
-                <div className="bg-yellow-500 border-8 border-black p-8 shadow-brutal">
-                  <h2 className="text-3xl font-black mb-6 uppercase border-b-4 border-black pb-2">FEATURED PROJECT</h2>
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div>
-                      {featuredProject.image_url && (
-                        <img
-                          src={featuredProject.image_url || "/placeholder.svg"}
-                          alt={featuredProject.name}
-                          className="border-4 border-black w-full h-auto"
-                        />
-                      )}
+              <div className="bg-yellow-500 border-8 border-black p-8 shadow-brutal">
+                <h2 className="text-3xl font-black mb-6 uppercase border-b-4 border-black pb-2">FEATURED PROJECT</h2>
+                <div className="grid md:grid-cols-2 gap-8">
+                  <div>
+                    <img
+                      src="/garduino-raspberry-pi.png"
+                      alt="Garduino Raspberry Pi Project"
+                      className="border-4 border-black w-full h-auto"
+                    />
+                  </div>
+                  <div className="space-y-4">
+                    <h3 className="text-2xl font-black">GARDUINO: SMART PLANT WATERING SYSTEM</h3>
+                    <p className="font-mono">
+                      Built an automated plant watering system using Raspberry Pi, soil moisture sensors, and a water
+                      pump, all controlled through a mobile app.
+                    </p>
+                    <div className="space-y-2">
+                      <h4 className="text-lg font-bold">Technologies Used:</h4>
+                      <ul className="font-mono list-disc pl-5 space-y-1">
+                        <li>Raspberry Pi</li>
+                        <li>Python</li>
+                        <li>Firebase Realtime Database</li>
+                        <li>React Native</li>
+                        <li>Soil moisture sensors</li>
+                      </ul>
                     </div>
-                    <div className="space-y-4">
-                      <h3 className="text-2xl font-black">{featuredProject.name.toUpperCase()}</h3>
-                      <p className="font-mono">{featuredProject.description}</p>
-                      <div className="space-y-2">
-                        <h4 className="text-lg font-bold">Technologies Used:</h4>
-                        <ul className="font-mono list-disc pl-5 space-y-1">
-                          {featuredProject.technologies.map((tech, index) => (
-                            <li key={index}>{tech}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      {(featuredProject.blog_url || featuredProject.live_url || featuredProject.github_url) && (
-                        <div className="flex flex-wrap gap-4">
-                          {featuredProject.blog_url && (
-                            <a
-                              href={featuredProject.blog_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="bg-black text-white border-4 border-black px-4 py-2 font-bold shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
-                            >
-                              READ CASE STUDY
-                            </a>
-                          )}
-                          {featuredProject.live_url && (
-                            <a
-                              href={featuredProject.live_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="bg-blue-600 text-white border-4 border-black px-4 py-2 font-bold shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
-                            >
-                              VIEW LIVE
-                            </a>
-                          )}
-                          {featuredProject.github_url && (
-                            <a
-                              href={featuredProject.github_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="bg-white border-4 border-black px-4 py-2 font-bold shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
-                            >
-                              VIEW CODE
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <a
+                      href="https://medium.com/@vaibhavipai/how-i-built-a-watering-system-for-my-plants-using-a-raspberry-pi-eaef378c816d"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-black text-white border-4 border-black px-4 py-2 font-bold shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
+                    >
+                      READ CASE STUDY
+                    </a>
                   </div>
                 </div>
-              ) : null}
+              </div>
 
               {/* Project Grid */}
-              {loading ? (
-                <LoadingGrid count={6} />
-              ) : (
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                  {[...aiProjects, ...technicalProjects].map((project) => (
-                    <div key={project.id} className="bg-white border-8 border-black p-6 shadow-brutal">
-                      <div className="mb-4">
-                        {project.image_url ? (
-                          <img
-                            src={project.image_url || "/placeholder.svg"}
-                            alt={project.name}
-                            className="w-full h-48 object-cover border-4 border-black"
-                          />
-                        ) : (
-                          <div
-                            className={`h-48 w-full ${project.category === "ai" ? "bg-red-600" : "bg-blue-600"} border-4 border-black flex items-center justify-center`}
-                          >
-                            <span className="text-white font-bold text-lg">NO IMAGE</span>
-                          </div>
-                        )}
-                      </div>
-                      <h3 className="text-xl font-black mb-2 uppercase">{project.name}</h3>
-                      <p className="font-mono mb-4">{project.description}</p>
-                      <div className="space-y-2 mb-4">
-                        <h4 className="font-bold">Technologies:</h4>
-                        <p className="font-mono text-sm">{project.technologies.join(", ")}</p>
-                      </div>
-                      <div className="space-y-2 mb-4">
-                        <h4 className="font-bold">Status:</h4>
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`px-2 py-1 text-xs font-bold border-2 border-black ${
-                              project.status === "completed"
-                                ? "bg-green-500"
-                                : project.status === "in-progress"
-                                  ? "bg-yellow-500"
-                                  : project.status === "planning"
-                                    ? "bg-blue-500 text-white"
-                                    : "bg-gray-200"
-                            }`}
-                          >
-                            {project.status.toUpperCase()}
-                          </span>
-                          {project.status !== "completed" && (
-                            <span className="font-mono text-sm">{project.progress}%</span>
-                          )}
-                        </div>
-                      </div>
-                      {(project.blog_url || project.live_url || project.github_url) && (
-                        <div className="flex flex-wrap gap-2">
-                          {project.blog_url && (
-                            <a
-                              href={project.blog_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`${project.category === "ai" ? "bg-red-600" : "bg-blue-600"} text-white border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block`}
-                            >
-                              VIEW PROJECT
-                            </a>
-                          )}
-                          {project.live_url && (
-                            <a
-                              href={project.live_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="bg-yellow-500 text-black border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
-                            >
-                              VIEW LIVE SITE
-                            </a>
-                          )}
-                          {project.github_url && (
-                            <a
-                              href={project.github_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="bg-black text-white border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
-                            >
-                              VIEW ON GITHUB
-                            </a>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+                <div className="bg-white border-8 border-black p-6 shadow-brutal">
+                  <div className="h-12 w-12 bg-black border-4 border-black mb-4"></div>
+                  <h3 className="text-xl font-black mb-2 uppercase">SALES CALL TRACKER</h3>
+                  <p className="font-mono mb-4">
+                    A tool for tracking and analyzing sales calls, with automated insights and reporting.
+                  </p>
+                  <div className="space-y-2 mb-4">
+                    <h4 className="font-bold">Technologies:</h4>
+                    <p className="font-mono text-sm">Node.js, Express, MongoDB, React</p>
+                  </div>
+                  <a
+                    href="https://vaibhavipai.medium.com/sales-call-tracking-a-guide-to-pick-your-weapon-6303a08ff4ba"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-black text-white border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
+                  >
+                    VIEW PROJECT
+                  </a>
                 </div>
-              )}
+
+                <div className="bg-white border-8 border-black p-6 shadow-brutal">
+                  <div className="h-12 w-12 bg-blue-600 border-4 border-black mb-4"></div>
+                  <h3 className="text-xl font-black mb-2 uppercase">JAVA MICROSERVICE ORCHESTRATOR</h3>
+                  <p className="font-mono mb-4">
+                    A Spring-based service that orchestrates communication between microservices.
+                  </p>
+                  <div className="space-y-2 mb-4">
+                    <h4 className="font-bold">Technologies:</h4>
+                    <p className="font-mono text-sm">Java, Spring Boot, RabbitMQ, Docker</p>
+                  </div>
+                  <a
+                    href="https://medium.com/nerd-for-tech/how-i-developed-a-microservice-orchestrating-service-in-java-starting-from-zero-knowledge-of-spring-a7cea7f23547"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-600 text-white border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
+                  >
+                    VIEW PROJECT
+                  </a>
+                </div>
+
+                <div className="bg-white border-8 border-black p-6 shadow-brutal">
+                  <div className="h-12 w-12 bg-red-600 border-4 border-black mb-4"></div>
+                  <h3 className="text-xl font-black mb-2 uppercase">PYTHON RECOMMENDER SYSTEM</h3>
+                  <p className="font-mono mb-4">
+                    A Python package for collaborative filtering-based recommendation systems.
+                  </p>
+                  <div className="space-y-2 mb-4">
+                    <h4 className="font-bold">Technologies:</h4>
+                    <p className="font-mono text-sm">Python, NumPy, Pandas, scikit-learn</p>
+                  </div>
+                  <a
+                    href="https://medium.com/analytics-vidhya/creating-a-python-distribution-module-for-recommender-systems-using-collaborative-filtering-a61a618d9d9b"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-red-600 text-white border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
+                  >
+                    VIEW PROJECT
+                  </a>
+                </div>
+
+                <div className="bg-white border-8 border-black p-6 shadow-brutal">
+                  <div className="h-12 w-12 bg-yellow-500 border-4 border-black mb-4"></div>
+                  <h3 className="text-xl font-black mb-2 uppercase">CLASSMENT ROADMAP TOOL</h3>
+                  <p className="font-mono mb-4">
+                    An app that generates a personalized roadmap to help you transition from your current role to your
+                    dream role.
+                  </p>
+                  <div className="space-y-2 mb-4">
+                    <h4 className="font-bold">Technologies:</h4>
+                    <p className="font-mono text-sm">Next.js, OpenAI API, Supabase</p>
+                  </div>
+                  <a
+                    href="https://theclassment-roadmap.vercel.app/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-yellow-500 text-black border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
+                  >
+                    VIEW LIVE SITE
+                  </a>
+                </div>
+
+                <div className="bg-white border-8 border-black p-6 shadow-brutal">
+                  <div className="h-12 w-12 bg-black border-4 border-black mb-4"></div>
+                  <h3 className="text-xl font-black mb-2 uppercase">BOOK MY SHOW SCRAPER</h3>
+                  <p className="font-mono mb-4">
+                    A Python script that notifies me when movie venues open for booking, built for Avengers Endgame
+                    release.
+                  </p>
+                  <div className="space-y-2 mb-4">
+                    <h4 className="font-bold">Technologies:</h4>
+                    <p className="font-mono text-sm">Python, Beautiful Soup, Twilio API</p>
+                  </div>
+                  <a
+                    href="https://github.com/Vaibhavi15/BookMyShowScraper"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-black text-white border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
+                  >
+                    VIEW ON GITHUB
+                  </a>
+                </div>
+
+                <div className="bg-white border-8 border-black p-6 shadow-brutal">
+                  <div className="h-12 w-12 bg-blue-600 border-4 border-black mb-4"></div>
+                  <h3 className="text-xl font-black mb-2 uppercase">AGENT IDEA GENERATOR</h3>
+                  <p className="font-mono mb-4">
+                    An automated workflow that generates AI agent ideas and creates engaging content scripts for
+                    build-with-me videos.
+                  </p>
+                  <div className="space-y-2 mb-4">
+                    <h4 className="font-bold">Technologies:</h4>
+                    <p className="font-mono text-sm">n8n, MongoDB, OpenAI API</p>
+                  </div>
+                  <a
+                    href="https://github.com/Vaibhavi15/agent-idea-generator"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-blue-600 text-white border-4 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
+                  >
+                    VIEW ON GITHUB
+                  </a>
+                </div>
+              </div>
             </div>
 
             <div className="bg-black text-white border-8 border-black p-8 shadow-brutal-inverse">

@@ -4,8 +4,6 @@ import { useState, useEffect } from "react"
 import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { LoadingSpinner } from "@/components/ui/loading-spinner"
-import { useBooks, useWorkoutSessions } from "@/hooks/use-supabase-data"
 import Link from "next/link"
 import { Book, Dumbbell, Waves, Code, Calendar, Star, Clock, ArrowRight, GitCommit } from "lucide-react"
 
@@ -138,7 +136,7 @@ export default function OpenPage() {
                     </li>
                     <li className="flex items-start gap-3">
                       <Waves className="h-5 w-5 mt-1 flex-shrink-0 text-yellow-500" />
-                      <span>Planning an upcoming Liveaboard scuba trip to Komodo, Indonesia</span>
+                      <span>Completed a Liveaboard scuba trip to Komodo, Indonesia</span>
                     </li>
                   </ul>
                 </div>
@@ -241,20 +239,16 @@ function CodeSection() {
   useEffect(() => {
     const fetchGithubData = async () => {
       try {
-        const apiUrl = "https://api.github.com/users/Vaibhavi15/events?per_page=100"
-        const response = await fetch(apiUrl)
-
-        if (!response.ok) {
-          throw new Error(`GitHub API returned ${response.status}`)
-        }
-
+        const response = await fetch("https://api.github.com/users/Vaibhavi15/events?per_page=100")
         const events = await response.json()
+
+        // Process events to create contribution data starting from June 2025
         const contributionData = processGithubEvents(events)
         setGithubData(contributionData)
       } catch (error) {
+        console.error("Error fetching GitHub data:", error)
         // Fallback to mock data
-        const mockData = generateMockContributions()
-        setGithubData(mockData)
+        setGithubData(generateMockContributions())
       } finally {
         setLoading(false)
       }
@@ -265,12 +259,8 @@ function CodeSection() {
 
   const processGithubEvents = (events) => {
     const contributions = {}
-    const currentDate = new Date()
     const startDate = new Date("2025-06-01")
-    const endOfYear = new Date(currentDate.getFullYear(), 11, 31)
-    const sixMonthsFromNow = new Date(currentDate)
-    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
-    const endDate = sixMonthsFromNow > endOfYear ? sixMonthsFromNow : endOfYear
+    const endDate = new Date("2025-12-31")
 
     // Initialize all dates with 0 contributions
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
@@ -278,63 +268,30 @@ function CodeSection() {
       contributions[dateStr] = 0
     }
 
-    // Process real GitHub events - only use events from June 2025 onwards
-    if (events && events.length > 0) {
-      events.forEach((event) => {
-        const eventDate = new Date(event.created_at)
-        const dateStr = eventDate.toISOString().split("T")[0]
-
-        // Only process events from June 2025 onwards
-        if (eventDate >= startDate && eventDate <= endDate) {
-          // Count valid contribution events
-          const isValidContribution =
-            event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent"
-
-          if (isValidContribution) {
-            contributions[dateStr] = (contributions[dateStr] || 0) + 1
-          }
+    // Count contributions from events
+    events.forEach((event) => {
+      const eventDate = new Date(event.created_at).toISOString().split("T")[0]
+      if (contributions.hasOwnProperty(eventDate)) {
+        if (event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent") {
+          contributions[eventDate]++
         }
-      })
-    }
+      }
+    })
 
     return contributions
   }
 
   const generateMockContributions = () => {
     const contributions = {}
-    const currentDate = new Date()
     const startDate = new Date("2025-06-01")
-    const endOfYear = new Date(currentDate.getFullYear(), 11, 31)
-    const sixMonthsFromNow = new Date(currentDate)
-    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
-    const endDate = sixMonthsFromNow > endOfYear ? sixMonthsFromNow : endOfYear
-
-    // Create a pattern of activity (more active on weekdays)
-    const activityPattern = [
-      [0, 0, 1, 0, 0, 0, 0], // Week 1 pattern
-      [0, 2, 1, 0, 3, 0, 0], // Week 2 pattern
-      [0, 1, 0, 2, 1, 0, 0], // Week 3 pattern
-      [0, 0, 2, 1, 4, 0, 0], // Week 4 pattern
-    ]
-
-    let weekCounter = 0
-    let totalContributions = 0
+    const endDate = new Date("2025-12-31")
 
     for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
       const dateStr = d.toISOString().split("T")[0]
-      const dayOfWeek = d.getDay() // 0 = Sunday, 1 = Monday, etc.
-
-      // Get contribution count from pattern
-      const patternWeek = weekCounter % activityPattern.length
-      const contributionCount = activityPattern[patternWeek][dayOfWeek]
-
-      contributions[dateStr] = contributionCount
-      totalContributions += contributionCount
-
-      // Increment week counter on Saturdays
-      if (dayOfWeek === 6) {
-        weekCounter++
-      }
+      // Generate random contributions (0-4) with higher probability for weekdays
+      const isWeekend = d.getDay() === 0 || d.getDay() === 6
+      const maxContributions = isWeekend ? 2 : 4
+      contributions[dateStr] = Math.floor(Math.random() * (maxContributions + 1))
     }
 
     return contributions
@@ -351,43 +308,27 @@ function CodeSection() {
   const renderContributionGraph = () => {
     if (!githubData) return null
 
-    const currentDate = new Date()
-    const currentMonth = currentDate.getMonth() // 0-11
-    const currentYear = currentDate.getFullYear()
-
-    // Generate month labels starting from June or current month, whichever is appropriate
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    const startMonthIndex = Math.max(5, currentMonth) // June (5) or current month
-    const months = []
-
-    for (let i = 0; i < 7; i++) {
-      const monthIndex = (startMonthIndex + i) % 12
-      months.push(monthNames[monthIndex])
-    }
-
+    const months = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
     // Group contributions by week
     const weeks = []
-    const startDate = new Date(Math.max(new Date("2025-06-01"), new Date(currentYear, currentMonth, 1)))
+    const startDate = new Date("2025-06-01")
 
     // Find the first Sunday
     const firstSunday = new Date(startDate)
     firstSunday.setDate(startDate.getDate() - startDate.getDay())
 
-    const iterDate = new Date(firstSunday)
-    const endOfYear = new Date(currentDate.getFullYear(), 11, 31)
-    const sixMonthsFromNow = new Date(currentDate)
-    sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6)
-    const endDate = sixMonthsFromNow > endOfYear ? sixMonthsFromNow : endOfYear
+    const currentDate = new Date(firstSunday)
+    const endDate = new Date("2025-12-31")
 
-    while (iterDate <= endDate) {
+    while (currentDate <= endDate) {
       const week = []
       for (let i = 0; i < 7; i++) {
-        const dateStr = iterDate.toISOString().split("T")[0]
+        const dateStr = currentDate.toISOString().split("T")[0]
         const count = githubData[dateStr] || 0
-        week.push({ date: dateStr, count, day: iterDate.getDay() })
-        iterDate.setDate(iterDate.getDate() + 1)
+        week.push({ date: dateStr, count, day: currentDate.getDay() })
+        currentDate.setDate(currentDate.getDate() + 1)
       }
       weeks.push(week)
     }
@@ -461,19 +402,13 @@ function CodeSection() {
 
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <LoadingSpinner size="lg" />
+            <div className="font-mono">Loading contributions...</div>
           </div>
         ) : (
           <>
             {renderContributionGraph()}
             <div className="flex justify-between items-center mt-4">
-              <div className="text-xs font-mono text-gray-600">
-                {new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })} -
-                {new Date(new Date().setMonth(new Date().getMonth() + 6)).toLocaleDateString("en-US", {
-                  month: "short",
-                  year: "numeric",
-                })}
-              </div>
+              <div className="text-xs font-mono text-gray-600">June - December 2025</div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono">Less</span>
                 <div className="flex gap-1">
@@ -587,42 +522,25 @@ function CodeSection() {
 }
 
 function BooksSection() {
-  const { books, loading, error } = useBooks()
-
-  if (error) {
-    return (
-      <div className="bg-red-600 text-white border-4 border-black p-6">
-        <p className="font-mono">Failed to load books: {error}</p>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-32">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
-
-  const currentlyReading = books.filter((book) => book.status === "reading")
-  const recentlyCompleted = books.filter((book) => book.status === "completed").slice(0, 4)
-  const booksRead = books.filter((book) => book.status === "completed").length
+  // Sample data
+  const booksRead = 4
   const booksGoal = 12
-
-  // Calculate genre breakdown
-  const genreCount = books.reduce((acc, book) => {
-    if (book.status === "completed") {
-      acc[book.genre] = (acc[book.genre] || 0) + 1
-    }
-    return acc
-  }, {})
-
-  const genreBreakdown = Object.entries(genreCount).map(([genre, count], index) => ({
-    genre: genre.charAt(0).toUpperCase() + genre.slice(1),
-    count,
-    color: ["bg-red-600", "bg-blue-600", "bg-yellow-500", "bg-black"][index % 4],
-  }))
+  const currentlyReading = [
+    { title: "Made to Stick", author: "Dan and Chip Heath", progress: 65 },
+    { title: "The Book of Clarity", author: "Paras Chopra", progress: 15 },
+  ]
+  const recentlyCompleted = [
+    { title: "Contagious", author: "Jonah Berger", rating: 3, date: "May 10, 2025", genre: "Marketing" },
+    { title: "Hacking Health", author: "Mukesh Bansal", rating: 3, date: "April 22, 2025", genre: "Health" },
+    { title: "Mahabharata Unravelled", author: "Ami Ganatra", rating: 4, date: "April 5, 2025", genre: "History" },
+    { title: "The Mom Test", author: "Rob Fitzpatrick", rating: 4, date: "March 18, 2025", genre: "Business" },
+  ]
+  const genreBreakdown = [
+    { genre: "Business", count: 2, color: "bg-red-600" },
+    { genre: "Marketing", count: 1, color: "bg-blue-600" },
+    { genre: "Health", count: 1, color: "bg-yellow-500" },
+    { genre: "History", count: 1, color: "bg-black" },
+  ]
 
   return (
     <div className="space-y-8">
@@ -643,8 +561,8 @@ function BooksSection() {
         <div className="bg-white border-4 border-black p-6 col-span-2">
           <h3 className="text-xl font-bold mb-4">CURRENTLY READING</h3>
           <div className="space-y-4">
-            {currentlyReading.map((book) => (
-              <div key={book.id} className="border-2 border-black p-4">
+            {currentlyReading.map((book, index) => (
+              <div key={index} className="border-2 border-black p-4">
                 <h4 className="font-bold">{book.title}</h4>
                 <p className="text-sm font-mono mb-2">by {book.author}</p>
                 <div className="flex items-center gap-2">
@@ -663,29 +581,23 @@ function BooksSection() {
         <div className="md:col-span-2">
           <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">RECENTLY COMPLETED</h3>
           <div className="grid sm:grid-cols-2 gap-4">
-            {recentlyCompleted.map((book) => (
-              <div key={book.id} className="bg-white border-4 border-black p-4 shadow-brutal">
+            {recentlyCompleted.map((book, index) => (
+              <div key={index} className="bg-white border-4 border-black p-4 shadow-brutal">
                 <div className="flex justify-between items-start">
                   <h4 className="font-bold">{book.title}</h4>
-                  {book.rating && (
-                    <div className="flex">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`h-4 w-4 ${i < book.rating! ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
-                        />
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${i < book.rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
+                      />
+                    ))}
+                  </div>
                 </div>
                 <p className="text-sm font-mono mb-2">by {book.author}</p>
                 <div className="flex justify-between items-center mt-2">
-                  <span className="text-xs font-mono bg-gray-100 px-2 py-1 border border-black">
-                    {book.genre.charAt(0).toUpperCase() + book.genre.slice(1)}
-                  </span>
-                  {book.completed_date && (
-                    <span className="text-xs font-mono">{new Date(book.completed_date).toLocaleDateString()}</span>
-                  )}
+                  <span className="text-xs font-mono bg-gray-100 px-2 py-1 border border-black">{book.genre}</span>
+                  <span className="text-xs font-mono">{book.date}</span>
                 </div>
               </div>
             ))}
@@ -725,35 +637,12 @@ function BooksSection() {
 }
 
 function FitnessSection() {
-  const { sessions, loading, error } = useWorkoutSessions()
-
-  if (error) {
-    return (
-      <div className="bg-red-600 text-white border-4 border-black p-6">
-        <p className="font-mono">Failed to load workout data: {error}</p>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-32">
-        <LoadingSpinner size="lg" />
-      </div>
-    )
-  }
-
-  // Calculate workout type breakdown
-  const workoutTypeCount = sessions.reduce((acc, session) => {
-    acc[session.workout_type] = (acc[session.workout_type] || 0) + (session.duration_minutes || 0)
-    return acc
-  }, {})
-
+  // Sample data for workout types
   const workoutTypes = [
-    { type: "Strength", hours: Math.round((workoutTypeCount.strength || 0) / 60), color: "bg-blue-600" },
-    { type: "Cardio", hours: Math.round((workoutTypeCount.cardio || 0) / 60), color: "bg-red-600" },
-    { type: "Yoga", hours: Math.round((workoutTypeCount.yoga || 0) / 60), color: "bg-yellow-500" },
-    { type: "HIIT", hours: Math.round((workoutTypeCount.hiit || 0) / 60), color: "bg-black" },
+    { type: "Strength", hours: 18, color: "bg-blue-600" },
+    { type: "Cardio", hours: 15, color: "bg-red-600" },
+    { type: "Yoga", hours: 8, color: "bg-yellow-500" },
+    { type: "HIIT", hours: 3, color: "bg-black" },
   ]
 
   const personalBests = [
@@ -769,32 +658,67 @@ function FitnessSection() {
   // Months (starting from May 2025)
   const months = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
-  // Create workout data from sessions
-  const workoutData = {}
-  months.forEach((month) => {
-    workoutData[month] = Array(5)
-      .fill(null)
-      .map(() => Array(7).fill(0))
-  })
-
-  // Populate with actual session data
-  sessions.forEach((session) => {
-    const sessionDate = new Date(session.date)
-    const monthName = sessionDate.toLocaleDateString("en-US", { month: "short" })
-
-    if (workoutData[monthName]) {
-      const workoutTypeMap = { cardio: 1, hiit: 2, strength: 3, yoga: 4 }
-      const workoutTypeValue = workoutTypeMap[session.workout_type] || 0
-
-      // Calculate week and day indices (simplified)
-      const dayOfWeek = sessionDate.getDay()
-      const weekOfMonth = Math.floor(sessionDate.getDate() / 7)
-
-      if (workoutData[monthName][weekOfMonth] && workoutData[monthName][weekOfMonth][dayOfWeek] !== undefined) {
-        workoutData[monthName][weekOfMonth][dayOfWeek] = workoutTypeValue
-      }
-    }
-  })
+  // Generate workout data with specific workout types
+  // 0 = no workout, 1 = Cardio, 2 = HIIT, 3 = Strength, 4 = Yoga
+  const workoutData = {
+    // May 2025 (with 3 random days per week with Cardio and HIIT until May 22, then continuing with Strength, Cardio, Yoga)
+    May: [
+      // Week 1 (May 1-4)
+      [0, 0, 1, 0, 2, 0, 0], // May 1-4 (Thu, Fri)
+      // Week 2 (May 5-11)
+      [1, 0, 0, 2, 0, 1, 0], // May 5-11 (Mon, Thu, Sat)
+      // Week 3 (May 12-18)
+      [0, 2, 0, 0, 1, 0, 2], // May 12-18 (Tue, Fri, Sun)
+      // Week 4 (May 19-25) - continuing from May 22 with new workout types
+      [1, 0, 2, 3, 4, 0, 3], // May 19-25 (Mon, Wed, Thu Strength, Fri Yoga, Sun Strength)
+      // Week 5 (May 26-31)
+      [0, 4, 0, 1, 0, 3, 0], // May 26-31 (Tue Yoga, Thu Cardio, Sat Strength)
+    ],
+    // June 2025 (continuing with 3 workouts per week)
+    Jun: [
+      // Week 1 (June 1-7)
+      [0, 3, 0, 4, 0, 1, 0], // June 1-7 (Mon Strength, Wed Yoga, Fri Cardio)
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+    ],
+    Jul: [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+    ],
+    Aug: [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+    ],
+    Sep: [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+    ],
+    Oct: [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+    ],
+    Nov: [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+    ],
+    Dec: [
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0],
+    ],
+  }
 
   // Helper function to get color class based on workout type
   const getWorkoutTypeColor = (type) => {
@@ -812,6 +736,41 @@ function FitnessSection() {
       default:
         return "bg-gray-100 border-gray-200"
     }
+  }
+
+  // Updated helper function to calculate dates correctly across the entire grid
+  const getActualDate = (monthName, weekIndex, dayIndex) => {
+    // Create a mapping of all months to their positions in the grid
+    const monthOrder = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const monthPosition = monthOrder.indexOf(monthName)
+
+    // Calculate the total week index across all months
+    let totalWeekIndex = 0
+    for (let i = 0; i < monthPosition; i++) {
+      totalWeekIndex += workoutData[monthOrder[i]].length
+    }
+    totalWeekIndex += weekIndex
+
+    // Start from May 1st, 2025 and find the first Monday of the grid
+    const may1st = new Date(2025, 4, 1) // May 1st, 2025
+    const firstDayOfWeek = may1st.getDay() // 0 = Sunday, 1 = Monday, etc.
+
+    // Calculate how many days to go back to get to the Monday of the week containing May 1st
+    const daysToFirstMonday = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
+
+    // Get the first Monday of the grid
+    const firstMonday = new Date(may1st)
+    firstMonday.setDate(may1st.getDate() - daysToFirstMonday)
+
+    // Calculate the actual date
+    const actualDate = new Date(firstMonday)
+    actualDate.setDate(firstMonday.getDate() + totalWeekIndex * 7 + dayIndex)
+
+    return actualDate.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    })
   }
 
   return (
@@ -838,6 +797,7 @@ function FitnessSection() {
                   <div className="flex">
                     {Object.keys(workoutData).map((month) =>
                       workoutData[month].map((week, weekIndex) => {
+                        const actualDate = getActualDate(month, weekIndex, dayIndex)
                         const workoutType = week[dayIndex]
                         const workoutName =
                           workoutType === 1
@@ -854,7 +814,7 @@ function FitnessSection() {
                           <div
                             key={`${month}-${weekIndex}-${dayIndex}`}
                             className={`w-6 h-6 border mx-[1px] ${getWorkoutTypeColor(workoutType)}`}
-                            title={`${month} Week ${weekIndex + 1}: ${workoutName}`}
+                            title={`${actualDate}: ${workoutName}`}
                           ></div>
                         )
                       }),
@@ -938,34 +898,81 @@ function FitnessSection() {
 }
 
 function ScubaSection() {
-  // Sample data
-  const totalDives = 19
-  const divesThisYear = 4
+  const [recentDives, setRecentDives] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Updated stats
+  const totalDives = 28
+  const divesThisYear = 12
+  const diveSitesVisited = 23
   const certifications = ["Open Water", "Advanced Open Water"]
 
-  const recentDives = [
-    {
-      location: "Busy Buro, Neil Island, Andamans",
-      date: "March 29, 2025",
-      depth: "23m",
-      duration: "51 min",
-      highlights: "Spotted Octopus, Unicorn fish, clown fish",
-    },
-    {
-      location: "Romba, Neil Island, Andamans",
-      date: "March 29, 2025",
-      depth: "25m",
-      duration: "36 min",
-      highlights: "Spotted Blue spotted stringrays, Sweet lips, Moray eel",
-    },
-    {
-      location: "Aquarium, Neil Island, Andamans",
-      date: "March 29, 2025",
-      depth: "23m",
-      duration: "51 min",
-      highlights: "Spotted banded sea krait, groupers, fusiliers",
-    },
-  ]
+  useEffect(() => {
+    const fetchRecentDives = async () => {
+      try {
+        const { createClient } = await import("@supabase/supabase-js")
+
+        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+
+        const { data, error } = await supabase
+          .from("scuba_dives")
+          .select("*")
+          .order("date", { ascending: false })
+          .limit(3)
+
+        if (error) {
+          throw error
+        }
+
+        // Format the data for display
+        const formattedDives = data.map((dive) => ({
+          location: dive.location,
+          date: new Date(dive.date).toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          }),
+          depth: `${dive.depth}m`,
+          duration: `${dive.duration} min`,
+          highlights: dive.highlights || dive.marine_life_spotted || "Great dive experience",
+        }))
+
+        setRecentDives(formattedDives)
+      } catch (err) {
+        console.error("Error fetching dives:", err)
+        setError(err.message)
+        // Fallback to static data if Supabase fails
+        setRecentDives([
+          {
+            location: "Busy Buro, Neil Island, Andamans",
+            date: "March 29, 2025",
+            depth: "23m",
+            duration: "51 min",
+            highlights: "Spotted Octopus, Unicorn fish, clown fish",
+          },
+          {
+            location: "Romba, Neil Island, Andamans",
+            date: "March 29, 2025",
+            depth: "25m",
+            duration: "36 min",
+            highlights: "Spotted Blue spotted stringrays, Sweet lips, Moray eel",
+          },
+          {
+            location: "Aquarium, Neil Island, Andamans",
+            date: "March 29, 2025",
+            depth: "23m",
+            duration: "51 min",
+            highlights: "Spotted banded sea krait, groupers, fusiliers",
+          },
+        ])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRecentDives()
+  }, [])
 
   const marineLifeSpotted = [
     "Reef Sharks",
@@ -998,7 +1005,7 @@ function ScubaSection() {
             </div>
             <div className="bg-white border-2 border-black p-4">
               <div className="text-center">
-                <div className="text-5xl font-black">14</div>
+                <div className="text-5xl font-black">{diveSitesVisited}</div>
                 <p className="font-mono mt-1">Dive Sites Visited</p>
               </div>
             </div>
@@ -1007,6 +1014,18 @@ function ScubaSection() {
 
         <div className="md:col-span-2">
           <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">RECENT DIVES</h3>
+
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="font-mono">Loading recent dives...</div>
+            </div>
+          ) : error ? (
+            <div className="bg-red-100 border-4 border-red-600 p-4">
+              <p className="font-mono text-red-800">Error loading dives: {error}</p>
+              <p className="font-mono text-sm text-red-600 mt-2">Showing fallback data</p>
+            </div>
+          ) : null}
+
           <div className="space-y-4">
             {recentDives.map((dive, index) => (
               <div key={index} className="bg-white border-4 border-black p-4 shadow-brutal">

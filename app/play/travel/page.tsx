@@ -4,30 +4,12 @@ import { useState } from "react"
 import Link from "next/link"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
-import { LoadingGrid } from "@/components/ui/loading-spinner"
-import { useTravelData } from "@/hooks/use-supabase-data"
 import { MapPin, Plane, ExternalLink, Instagram, Globe } from "lucide-react"
 
 export default function TravelPage() {
+  // Change the default active tab from "overview" to "itineraries"
   const [activeTab, setActiveTab] = useState("itineraries")
-  const { itineraries, loading, error } = useTravelData()
-
-  if (error) {
-    return (
-      <div className="min-h-screen font-mono">
-        <div className="bg-background text-foreground min-h-screen">
-          <Header />
-          <main className="container py-12 px-4 sm:px-6 lg:px-8">
-            <div className="bg-red-600 text-white border-8 border-black p-8 shadow-brutal">
-              <h2 className="text-2xl font-black mb-4">ERROR</h2>
-              <p className="font-mono">Failed to load travel data: {error}</p>
-            </div>
-          </main>
-          <Footer />
-        </div>
-      </div>
-    )
-  }
+  const [selectedCountry, setSelectedCountry] = useState(null)
 
   const visitedCountries = [
     { name: "India", code: "IN", continent: "Asia", visits: "Home base", highlight: "Diverse cultures and cuisines" },
@@ -77,6 +59,129 @@ export default function TravelPage() {
     googleMapsContributions: "3000+",
     instagramPosts: "150+",
   }
+
+  // Updated itineraries with details from the spreadsheets
+  const itineraries = [
+    {
+      country: "Vietnam",
+      duration: "14 days",
+      cities: ["Cao Bang", "Ha Long Bay", "Hanoi", "Phong Nha", "Hoi An", "Dalat"],
+      highlights: [
+        "Ban Guoc waterfalls",
+        "Ha Long Bay cruise",
+        "Phong Nha cave exploration",
+        "Hai Van Pass jeep tour",
+        "Hoi An lantern making",
+        "Dalat canyoning",
+      ],
+      bestTime: "November - April",
+      mustTry: ["Pho", "Banh Mi", "Vietnamese Coffee", "Fresh Spring Rolls"],
+      image: "/vietnam-travel.png",
+      link: "https://docs.google.com/spreadsheets/d/1ifUMsDWCOPPpG_3n8wmR7ftiJdREYFQ7SrF8Sh7TZw0/edit?usp=sharing",
+      details: [
+        { day: 1, activity: "Ban Guoc waterfalls in Cao Bang / Rest day", location: "Cao Bang" },
+        { day: 2, activity: "Cruise to Ha Long Bay", location: "Ha Long Bay" },
+        {
+          day: 3,
+          activity: "Incense stick village, Street food tour, Train street, Huong Sen Healthcare Center",
+          location: "Hanoi",
+        },
+        { day: 4, activity: "Cave exploration and national park - Phong Nha (7 hours hike)", location: "Phong Nha" },
+        { day: 5, activity: "Explore the city and rest", location: "Hoi An" },
+        {
+          day: 6,
+          activity: "Drive on the Hai Van Pass (jeep tour), get clothes stitched from Tuong tailor",
+          location: "Hoi An",
+        },
+        {
+          day: 7,
+          activity: "Cycling tour to herb garden and to the beach, lantern making workshop",
+          location: "Hoi An",
+        },
+        { day: 8, activity: "Explore city and basket boat tour, Teh Dar circus", location: "Hoi An" },
+        { day: 9, activity: "Rest day, I-resort (mud spa), Cliff diving", location: "Hoi An" },
+        { day: 10, activity: "Canyoning in Dalat, Alpine roller coaster, City tour", location: "Dalat" },
+        { day: 11, activity: "Rest day", location: "Dalat" },
+        { day: 12, activity: "Kite surfing, White sand dunes quad biking", location: "Mui Ne" },
+        { day: 13, activity: "Chu chi tunnel, shooting, golden water puppet", location: "Ho Chi Minh City" },
+        { day: 14, activity: "Shopping at Ben then market and rest", location: "Ho Chi Minh City" },
+      ],
+    },
+    {
+      country: "Japan",
+      duration: "10 days",
+      cities: ["Tokyo", "Osaka", "Kyoto", "Mt. Fuji"],
+      highlights: [
+        "Dotonbori area in Osaka",
+        "Fushimi Inari shrine in Kyoto",
+        "Cup Noodle Museum",
+        "Mt. Fuji day trip",
+        "Shibuya Crossing",
+        "TeamLab Planets",
+      ],
+      bestTime: "March - May, September - November",
+      mustTry: ["Ramen", "Sushi", "Takoyaki", "Matcha", "Mochi"],
+      image: "/japan-travel.png",
+      link: "https://docs.google.com/spreadsheets/d/1KZhlDpuaFYcfWoTs5w3Y7V0nPf2pPecuj-3JpPPMkK0/edit?usp=sharing",
+      details: [
+        { day: 1, activity: "Flight to Tokyo Narita, Shinkansen to Osaka, Explore Dotonbori area", location: "Osaka" },
+        {
+          day: 2,
+          activity: "Kyo-train garaku to Kyoto, Arashiyama bamboo forest, Nishiki market, Kiyomizu-dera temple",
+          location: "Kyoto",
+        },
+        {
+          day: 3,
+          activity: "Fushimi Inari shrine, Gion district (Geisha spotting), Dinner at Pontocho street",
+          location: "Kyoto",
+        },
+        { day: 4, activity: "Cup Noodle Museum, Osaka Castle, Shinsekai, Tombori river cruise", location: "Osaka" },
+        { day: 5, activity: "Namba Yasaka shrine, Kuromon Ichiba Market, Shinkansen to Tokyo", location: "Tokyo" },
+        { day: 6, activity: "Mt. Fuji day trip, Kawaguchi lake, Ice caves, Maple corridor", location: "Mt. Fuji" },
+        {
+          day: 7,
+          activity: "TeamLab Planets, Ginza, Akihabara, Ryogoku (Sumo wrestlers), Tokyo Skytree",
+          location: "Tokyo",
+        },
+        {
+          day: 8,
+          activity: "Meiji Shrine, Takeshita street, Shibuya Parco, MonkeyKart, Shibuya Crossing, Hachiko statue",
+          location: "Tokyo",
+        },
+        { day: 9, activity: "Free day to cover anything missed", location: "Tokyo" },
+        { day: 10, activity: "Self-care time, Flight back home", location: "Tokyo" },
+      ],
+    },
+    {
+      country: "Indonesia",
+      duration: "10 days",
+      cities: ["Kuta", "Ubud", "Labuan Bajo", "Komodo"],
+      highlights: [
+        "Beach horse riding in Kuta",
+        "Liveaboard diving in Komodo",
+        "ATV riding in Ubud",
+        "Mt. Batur sunrise jeep ride",
+        "Rice field cycling",
+        "Balinese cooking class",
+      ],
+      bestTime: "April - October",
+      mustTry: ["Nasi Gudeg", "Rendang", "Satay", "Gado-gado"],
+      image: "/indonesia-travel.png",
+      link: "https://docs.google.com/spreadsheets/d/1WI4m03MH-iBeZE7KO7iYfK5Xg6pQEOOCunkkZhMI7aA/edit?usp=sharing",
+      details: [
+        { day: 1, activity: "Arrival and rest", location: "Kuta/Ubud" },
+        { day: 2, activity: "Beach horse riding", location: "Kuta/Ubud" },
+        { day: 3, activity: "Flight from DPS to LBJ", location: "Labuan Bajo" },
+        { day: 4, activity: "Liveaboard in Komodo", location: "Boat" },
+        { day: 5, activity: "Liveaboard in Komodo", location: "Boat" },
+        { day: 6, activity: "Liveaboard in Komodo", location: "Labuan Bajo" },
+        { day: 7, activity: "Flight from LBJ to DPS, Balinese cooking class, beach club", location: "Ubud" },
+        { day: 8, activity: "ATV riding, Rice field cycling", location: "Ubud" },
+        { day: 9, activity: "Mt. Batur Sunrise jeep ride, Visit waterfalls", location: "Ubud" },
+        { day: 10, activity: "Flight back home", location: "Home" },
+      ],
+    },
+  ]
 
   return (
     <div className="min-h-screen font-mono">
@@ -160,7 +265,7 @@ export default function TravelPage() {
               </div>
             </div>
 
-            {/* Navigation Tabs */}
+            {/* Navigation Tabs - Removed gallery and tips tabs */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <button
                 onClick={() => setActiveTab("itineraries")}
@@ -189,90 +294,73 @@ export default function TravelPage() {
                   <h2 className="text-3xl font-black mb-6 uppercase border-b-4 border-black pb-2">
                     TRAVEL ITINERARIES
                   </h2>
+                  <div className="space-y-12">
+                    {itineraries.map((itinerary, index) => (
+                      <div key={index} className="border-4 border-black p-6 shadow-brutal">
+                        <div className="grid md:grid-cols-3 gap-6">
+                          <div className="aspect-video bg-gray-200 border-4 border-black">
+                            <img
+                              src={itinerary.image || "/placeholder.svg"}
+                              alt={`${itinerary.country} travel`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
 
-                  {loading ? (
-                    <LoadingGrid count={3} />
-                  ) : (
-                    <div className="space-y-12">
-                      {itineraries.map((itinerary) => (
-                        <div key={itinerary.id} className="border-4 border-black p-6 shadow-brutal">
-                          <div className="grid md:grid-cols-3 gap-6">
-                            <div className="aspect-video bg-gray-200 border-4 border-black">
-                              <img
-                                src={itinerary.image_url || "/placeholder.svg"}
-                                alt={`${itinerary.country} travel`}
-                                className="w-full h-full object-cover"
-                              />
+                          <div className="md:col-span-2 space-y-4">
+                            <div className="flex items-center gap-4">
+                              <h3 className="text-2xl font-black">{itinerary.country}</h3>
+                              <span className="bg-blue-600 text-white px-3 py-1 font-bold border-2 border-black">
+                                {itinerary.duration}
+                              </span>
                             </div>
 
-                            <div className="md:col-span-2 space-y-4">
-                              <div className="flex items-center gap-4">
-                                <h3 className="text-2xl font-black">{itinerary.country}</h3>
-                                {itinerary.duration_days && (
-                                  <span className="bg-blue-600 text-white px-3 py-1 font-bold border-2 border-black">
-                                    {itinerary.duration_days} days
-                                  </span>
-                                )}
+                            <div className="grid md:grid-cols-2 gap-4">
+                              <div>
+                                <h4 className="font-bold mb-2 border-b border-black pb-1">CITIES VISITED</h4>
+                                <ul className="font-mono space-y-1">
+                                  {itinerary.cities.map((city, idx) => (
+                                    <li key={idx}>• {city}</li>
+                                  ))}
+                                </ul>
                               </div>
 
-                              <div className="grid md:grid-cols-2 gap-4">
-                                {itinerary.cities && itinerary.cities.length > 0 && (
-                                  <div>
-                                    <h4 className="font-bold mb-2 border-b border-black pb-1">CITIES VISITED</h4>
-                                    <ul className="font-mono space-y-1">
-                                      {itinerary.cities.map((city, idx) => (
-                                        <li key={idx}>• {city}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
+                              <div>
+                                <h4 className="font-bold mb-2 border-b border-black pb-1">HIGHLIGHTS</h4>
+                                <ul className="font-mono space-y-1">
+                                  {itinerary.highlights.slice(0, 6).map((highlight, idx) => (
+                                    <li key={idx}>• {highlight}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            </div>
 
-                                {itinerary.highlights && itinerary.highlights.length > 0 && (
-                                  <div>
-                                    <h4 className="font-bold mb-2 border-b border-black pb-1">HIGHLIGHTS</h4>
-                                    <ul className="font-mono space-y-1">
-                                      {itinerary.highlights.slice(0, 6).map((highlight, idx) => (
-                                        <li key={idx}>• {highlight}</li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                )}
+                            <div className="grid md:grid-cols-2 gap-4">
+                              <div>
+                                <h4 className="font-bold mb-2">BEST TIME TO VISIT</h4>
+                                <p className="font-mono">{itinerary.bestTime}</p>
                               </div>
 
-                              <div className="grid md:grid-cols-2 gap-4">
-                                {itinerary.best_time_to_visit && (
-                                  <div>
-                                    <h4 className="font-bold mb-2">BEST TIME TO VISIT</h4>
-                                    <p className="font-mono">{itinerary.best_time_to_visit}</p>
-                                  </div>
-                                )}
-
-                                {itinerary.must_try_foods && itinerary.must_try_foods.length > 0 && (
-                                  <div>
-                                    <h4 className="font-bold mb-2">MUST TRY FOODS</h4>
-                                    <p className="font-mono">{itinerary.must_try_foods.join(", ")}</p>
-                                  </div>
-                                )}
+                              <div>
+                                <h4 className="font-bold mb-2">MUST TRY FOODS</h4>
+                                <p className="font-mono">{itinerary.mustTry.join(", ")}</p>
                               </div>
+                            </div>
 
-                              {itinerary.spreadsheet_url && (
-                                <div className="mt-4">
-                                  <a
-                                    href={itinerary.spreadsheet_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="bg-blue-600 text-white border-4 border-black px-4 py-2 font-bold shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-flex items-center gap-2"
-                                  >
-                                    VIEW DETAILED ITINERARY <ExternalLink className="h-4 w-4" />
-                                  </a>
-                                </div>
-                              )}
+                            <div className="mt-4">
+                              <a
+                                href={itinerary.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="bg-blue-600 text-white border-4 border-black px-4 py-2 font-bold shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-flex items-center gap-2"
+                              >
+                                VIEW DETAILED ITINERARY <ExternalLink className="h-4 w-4" />
+                              </a>
                             </div>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
