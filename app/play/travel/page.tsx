@@ -371,7 +371,7 @@ export default function TravelPage() {
                   {/* Embedded World Map */}
                   <div className="border-4 border-black p-4 shadow-brutal">
                     <iframe
-                      src="https://visitedplaces.com/embed/?map=world&projection=geoNaturalEarth1&theme=dark-green&water=1&graticule=0&names=1&duration=2000&placeduration=100&slider=0&autoplay=0&autozoom=none&autostep=0&home=IN&places=~GB_AE_JP_SG_MY_TH_VN_LK~5_3.1_44.5_13.1_0"
+                      src="https://visitedplaces.com/embed/?map=world&projection=geoNaturalEarth1&theme=dark-green&water=1&graticule=0&names=1&duration=2000&placeduration=100&slider=0&autoplay=0&autozoom=none&autostep=0&home=IN&places=~GB_AE_JP_SG_MY_TH_VN_LK_ID~5_3.1_44.5_13.1_0"
                       style={{ width: "100%", height: "600px" }}
                       title="Visited Countries Map"
                     ></iframe>
