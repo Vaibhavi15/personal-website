@@ -984,7 +984,7 @@ function ScubaSection() {
 
         const { data, error } = await supabase
           .from("scuba_dives")
-          .select("*")
+          .select("location, dive_site, date, max_depth_meters, duration_minutes, highlights")
           .order("date", { ascending: false })
           .limit(3)
 
@@ -994,15 +994,15 @@ function ScubaSection() {
 
         // Format the data for display
         const formattedDives = data.map((dive) => ({
-          location: dive.location,
+          location: dive.dive_site ? `${dive.dive_site}, ${dive.location}` : dive.location,
           date: new Date(dive.date).toLocaleDateString("en-US", {
             month: "long",
             day: "numeric",
             year: "numeric",
           }),
-          depth: `${dive.depth}m`,
-          duration: `${dive.duration} min`,
-          highlights: dive.highlights || dive.marine_life_spotted || "Great dive experience",
+          depth: dive.max_depth_meters ? `${dive.max_depth_meters}m` : "N/A",
+          duration: dive.duration_minutes ? `${dive.duration_minutes} min` : "N/A",
+          highlights: dive.highlights || "Great dive experience",
         }))
 
         setRecentDives(formattedDives)
