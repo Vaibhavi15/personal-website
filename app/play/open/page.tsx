@@ -637,13 +637,17 @@ function BooksSection() {
 }
 
 function FitnessSection() {
-  // Sample data for workout types
-  const workoutTypes = [
-    { type: "Strength", hours: 18, color: "bg-blue-600" },
-    { type: "Cardio", hours: 15, color: "bg-red-600" },
-    { type: "Yoga", hours: 8, color: "bg-yellow-500" },
-    { type: "HIIT", hours: 3, color: "bg-black" },
-  ]
+  const [workoutData, setWorkoutData] = useState({})
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  // Sample data for workout types (will be calculated from fetched data)
+  const [workoutTypes, setWorkoutTypes] = useState([
+    { type: "Strength", hours: 0, color: "bg-blue-600" },
+    { type: "Cardio", hours: 0, color: "bg-red-600" },
+    { type: "Yoga", hours: 0, color: "bg-yellow-500" },
+    { type: "HIIT", hours: 0, color: "bg-black" },
+  ])
 
   const personalBests = [
     { exercise: "Deadlift", value: "40 kg", date: "Aug 2024" },
@@ -652,73 +656,116 @@ function FitnessSection() {
     { exercise: "Push-ups", value: "22 reps", date: "Aug 2024" },
   ]
 
+  useEffect(() => {
+    const fetchWorkoutData = async () => {
+      try {
+        const { createClient } = await import("@supabase/supabase-js")
+        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+
+        const { data, error } = await supabase
+          .from("workout_sessions")
+          .select("date, workout_type")
+          .gte("date", "2025-05-01")
+          .lte("date", "2025-12-31")
+          .order("date", { ascending: true })
+
+        if (error) {
+          throw error
+        }
+
+        // Transform the data into the format needed for the calendar
+        const transformedData = transformWorkoutData(data)
+        setWorkoutData(transformedData)
+
+        // Calculate workout type hours (assuming 1 hour per session)
+        const typeHours = calculateWorkoutTypeHours(data)
+        setWorkoutTypes((prev) =>
+          prev.map((type) => ({
+            ...type,
+            hours: typeHours[type.type.toLowerCase()] || 0,
+          })),
+        )
+      } catch (err) {
+        console.error("Error fetching workout data:", err)
+        setError(err.message)
+        // Fallback to empty data
+        setWorkoutData({})
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchWorkoutData()
+  }, [])
+
+  const transformWorkoutData = (data) => {
+    // Create a map of dates to workout types
+    const dateMap = {}
+    data.forEach((session) => {
+      dateMap[session.date] = session.workout_type.toLowerCase()
+    })
+
+    // Create the month/week structure
+    const months = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const result = {}
+
+    months.forEach((month) => {
+      result[month] = []
+
+      // Get the first day of the month
+      const monthIndex = months.indexOf(month) + 5 // May = 5, Jun = 6, etc.
+      const year = 2025
+      const firstDay = new Date(year, monthIndex - 1, 1)
+
+      // Find the first Monday of the grid for this month
+      const firstMonday = new Date(firstDay)
+
+      const dayOfWeek = firstDay.getDay()
+      const daysToFirstMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
+      firstMonday.setDate(firstDay.getDate() - daysToFirstMonday)
+
+      // Generate weeks for this month (4 weeks per month for grid consistency)
+      for (let week = 0; week < 4; week++) {
+        const weekData = []
+        for (let day = 0; day < 7; day++) {
+          const currentDate = new Date(firstMonday)
+          currentDate.setDate(firstMonday.getDate() + week * 7 + day)
+
+          const dateStr = currentDate.toISOString().split("T")[0]
+          const workoutType = dateMap[dateStr]
+
+          // Map workout types to numbers
+          let workoutNum = 0
+          if (workoutType === "cardio") workoutNum = 1
+          else if (workoutType === "hiit") workoutNum = 2
+          else if (workoutType === "strength") workoutNum = 3
+          else if (workoutType === "yoga") workoutNum = 4
+
+          weekData.push(workoutNum)
+        }
+        result[month].push(weekData)
+      }
+    })
+
+    return result
+  }
+
+  const calculateWorkoutTypeHours = (data) => {
+    const hours = { strength: 0, cardio: 0, yoga: 0, hiit: 0 }
+    data.forEach((session) => {
+      const type = session.workout_type.toLowerCase()
+      if (hours.hasOwnProperty(type)) {
+        hours[type] += 1 // Assuming 1 hour per session
+      }
+    })
+    return hours
+  }
+
   // Days of the week
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
   // Months (starting from May 2025)
   const months = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-  // Generate workout data with specific workout types
-  // 0 = no workout, 1 = Cardio, 2 = HIIT, 3 = Strength, 4 = Yoga
-  const workoutData = {
-    // May 2025 (with 3 random days per week with Cardio and HIIT until May 22, then continuing with Strength, Cardio, Yoga)
-    May: [
-      // Week 1 (May 1-4)
-      [0, 0, 1, 0, 2, 0, 0], // May 1-4 (Thu, Fri)
-      // Week 2 (May 5-11)
-      [1, 0, 0, 2, 0, 1, 0], // May 5-11 (Mon, Thu, Sat)
-      // Week 3 (May 12-18)
-      [0, 2, 0, 0, 1, 0, 2], // May 12-18 (Tue, Fri, Sun)
-      // Week 4 (May 19-25) - continuing from May 22 with new workout types
-      [1, 0, 2, 3, 4, 0, 3], // May 19-25 (Mon, Wed, Thu Strength, Fri Yoga, Sun Strength)
-      // Week 5 (May 26-31)
-      [0, 4, 0, 1, 0, 3, 0], // May 26-31 (Tue Yoga, Thu Cardio, Sat Strength)
-    ],
-    // June 2025 (continuing with 3 workouts per week)
-    Jun: [
-      // Week 1 (June 1-7)
-      [0, 3, 0, 4, 0, 1, 0], // June 1-7 (Mon Strength, Wed Yoga, Fri Cardio)
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Jul: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Aug: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Sep: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Oct: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Nov: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-    Dec: [
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-      [0, 0, 0, 0, 0, 0, 0],
-    ],
-  }
 
   // Helper function to get color class based on workout type
   const getWorkoutTypeColor = (type) => {
@@ -738,31 +785,24 @@ function FitnessSection() {
     }
   }
 
-  // Updated helper function to calculate dates correctly across the entire grid
+  // Helper function to calculate dates correctly across the entire grid
   const getActualDate = (monthName, weekIndex, dayIndex) => {
-    // Create a mapping of all months to their positions in the grid
     const monthOrder = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     const monthPosition = monthOrder.indexOf(monthName)
 
-    // Calculate the total week index across all months
     let totalWeekIndex = 0
     for (let i = 0; i < monthPosition; i++) {
-      totalWeekIndex += workoutData[monthOrder[i]].length
+      totalWeekIndex += (workoutData[monthOrder[i]] || []).length
     }
     totalWeekIndex += weekIndex
 
-    // Start from May 1st, 2025 and find the first Monday of the grid
-    const may1st = new Date(2025, 4, 1) // May 1st, 2025
-    const firstDayOfWeek = may1st.getDay() // 0 = Sunday, 1 = Monday, etc.
-
-    // Calculate how many days to go back to get to the Monday of the week containing May 1st
+    const may1st = new Date(2025, 4, 1)
+    const firstDayOfWeek = may1st.getDay()
     const daysToFirstMonday = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
 
-    // Get the first Monday of the grid
     const firstMonday = new Date(may1st)
     firstMonday.setDate(may1st.getDate() - daysToFirstMonday)
 
-    // Calculate the actual date
     const actualDate = new Date(firstMonday)
     actualDate.setDate(firstMonday.getDate() + totalWeekIndex * 7 + dayIndex)
 
@@ -771,6 +811,30 @@ function FitnessSection() {
       day: "numeric",
       year: "numeric",
     })
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="bg-white border-4 border-black p-6">
+          <div className="flex items-center justify-center h-32">
+            <div className="font-mono">Loading workout data...</div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-8">
+        <div className="bg-red-100 border-4 border-red-600 p-6">
+          <h3 className="text-xl font-bold mb-4">Error Loading Workout Data</h3>
+          <p className="font-mono text-red-800">Error: {error}</p>
+          <p className="font-mono text-sm text-red-600 mt-2">Please check your Supabase connection</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -796,9 +860,9 @@ function FitnessSection() {
                   <div className="w-[80px] font-bold text-sm">{day}</div>
                   <div className="flex">
                     {Object.keys(workoutData).map((month) =>
-                      workoutData[month].map((week, weekIndex) => {
+                      (workoutData[month] || []).map((week, weekIndex) => {
                         const actualDate = getActualDate(month, weekIndex, dayIndex)
-                        const workoutType = week[dayIndex]
+                        const workoutType = week[dayIndex] || 0
                         const workoutName =
                           workoutType === 1
                             ? "Cardio"
@@ -854,10 +918,13 @@ function FitnessSection() {
               <div key={index} className="space-y-1">
                 <div className="flex justify-between items-center font-mono">
                   <span>{workout.type}</span>
-                  <span>{workout.hours} hours</span>
+                  <span>{workout.hours} sessions</span>
                 </div>
                 <div className="bg-white h-8 border-4 border-black flex items-center w-full">
-                  <div className={`${workout.color} h-full`} style={{ width: `${(workout.hours / 28) * 100}%` }}></div>
+                  <div
+                    className={`${workout.color} h-full`}
+                    style={{ width: `${Math.min((workout.hours / 20) * 100, 100)}%` }}
+                  ></div>
                 </div>
               </div>
             ))}
