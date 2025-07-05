@@ -5,7 +5,8 @@ import { useSearchParams } from "next/navigation"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import Link from "next/link"
-import { Book, Dumbbell, Waves, Code, Calendar, Star, Clock, ArrowRight, GitCommit } from "lucide-react"
+import { Book, Dumbbell, ChefHat, Code, Calendar, Star, Clock, ArrowRight, GitCommit } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 export default function OpenPage() {
   const searchParams = useSearchParams()
@@ -16,7 +17,7 @@ export default function OpenPage() {
     setAnimateIn(true)
     // Check for tab parameter in URL
     const tab = searchParams.get("tab")
-    if (tab && ["code", "books", "fitness", "scuba"].includes(tab)) {
+    if (tab && ["code", "books", "fitness", "cooking"].includes(tab)) {
       setActiveSection(tab)
     }
   }, [searchParams])
@@ -44,7 +45,7 @@ export default function OpenPage() {
               <div className="flex gap-4 items-center">
                 <div className="h-8 w-8 bg-blue-600"></div>
                 <p className="text-2xl font-mono max-w-3xl">
-                  Living life openly. Tracking my journey through code, books, fitness, and scuba diving.
+                  Living life openly. Tracking my journey through code, books, fitness, and cooking.
                 </p>
               </div>
             </div>
@@ -56,10 +57,10 @@ export default function OpenPage() {
                 work. I'll update this regularly as new adventures unfold.
               </p>
 
-              <div className="flex flex-wrap gap-4 items-center mb-8">
+              <div className="flex gap-4 items-center mb-8">
                 <div className="flex items-center gap-2 bg-yellow-500 px-3 py-1 border-2 border-black">
                   <Calendar className="h-5 w-5" />
-                  <span className="font-bold">Last updated: June 7, 2025</span>
+                  <span className="font-bold">Last updated: July 4, 2025</span>
                 </div>
                 <div className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1 border-2 border-black">
                   <Clock className="h-5 w-5" />
@@ -98,13 +99,13 @@ export default function OpenPage() {
                   <span>FITNESS</span>
                 </button>
                 <button
-                  onClick={() => handleSectionChange("scuba")}
+                  onClick={() => handleSectionChange("cooking")}
                   className={`flex items-center justify-center gap-2 p-4 border-4 border-black font-bold text-lg transition-all ${
-                    activeSection === "scuba" ? "bg-yellow-500 shadow-brutal" : "bg-white hover:bg-yellow-100"
+                    activeSection === "cooking" ? "bg-yellow-500 shadow-brutal" : "bg-white hover:bg-yellow-100"
                   }`}
                 >
-                  <Waves className="h-6 w-6" />
-                  <span>SCUBA</span>
+                  <ChefHat className="h-6 w-6" />
+                  <span>COOKING</span>
                 </button>
               </div>
 
@@ -112,7 +113,7 @@ export default function OpenPage() {
                 {activeSection === "code" && <CodeSection />}
                 {activeSection === "books" && <BooksSection />}
                 {activeSection === "fitness" && <FitnessSection />}
-                {activeSection === "scuba" && <ScubaSection />}
+                {activeSection === "cooking" && <CookingSection />}
               </div>
             </div>
 
@@ -135,8 +136,8 @@ export default function OpenPage() {
                       <span>Training for Devils Circuit obstacle race</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <Waves className="h-5 w-5 mt-1 flex-shrink-0 text-yellow-500" />
-                      <span>Completed a Liveaboard scuba trip to Komodo, Indonesia</span>
+                      <ChefHat className="h-5 w-5 mt-1 flex-shrink-0 text-yellow-500" />
+                      <span>Curating database of quick, nutritious and diverse recipes</span>
                     </li>
                   </ul>
                 </div>
@@ -156,8 +157,8 @@ export default function OpenPage() {
                       <span>Complete Devils Circuit in December 2025</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <Waves className="h-5 w-5 mt-1 flex-shrink-0 text-yellow-500" />
-                      <span>Obtain Dry Suit and Nitrox certifications</span>
+                      <ChefHat className="h-5 w-5 mt-1 flex-shrink-0 text-yellow-500" />
+                      <span>Master recipes from konkani cuisine</span>
                     </li>
                   </ul>
                 </div>
@@ -174,9 +175,10 @@ export default function OpenPage() {
                   numbers—it's about noticing connections between different areas of my life and learning from them."
                 </p>
                 <p className="font-mono text-lg">
-                  "I've found that my reading habits directly influence my coding creativity, and my fitness routine
-                  improves my scuba diving endurance. Everything is connected, and being open about these journeys helps
-                  me stay accountable and might inspire others along the way."
+                  "I've found that my reading habits directly influence my coding creativity, my fitness routine
+                  improves my focus, and cooking brings people together in the most beautiful way. Everything is
+                  connected, and being open about these journeys helps me stay accountable and might inspire others
+                  along the way."
                 </p>
               </div>
             </div>
@@ -236,28 +238,36 @@ function CodeSection() {
     },
   ]
 
-  useEffect(() => {
-    const fetchGithubData = async () => {
-      try {
-        const response = await fetch("https://api.github.com/users/Vaibhavi15/events?per_page=100")
-        const events = await response.json()
+  const fetchGithubData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("github_contributions")
+        .select("date, contribution_count")
+        .gte("date", "2025-06-01")
+        .lte("date", "2025-12-31")
+        .order("date", { ascending: true })
 
-        // Process events to create contribution data starting from June 2025
-        const contributionData = processGithubEvents(events)
-        setGithubData(contributionData)
-      } catch (error) {
-        console.error("Error fetching GitHub data:", error)
-        // Fallback to mock data
-        setGithubData(generateMockContributions())
-      } finally {
-        setLoading(false)
+      if (error) {
+        throw error
       }
-    }
 
+      // Transform the data into the format needed for the chart
+      const contributionData = processSupabaseContributions(data)
+      setGithubData(contributionData)
+    } catch (error) {
+      console.error("Error fetching GitHub data:", error)
+      // Fallback to mock data
+      setGithubData(generateMockContributions())
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchGithubData()
   }, [])
 
-  const processGithubEvents = (events) => {
+  const processSupabaseContributions = (data) => {
     const contributions = {}
     const startDate = new Date("2025-06-01")
     const endDate = new Date("2025-12-31")
@@ -268,41 +278,15 @@ function CodeSection() {
       contributions[dateStr] = 0
     }
 
-    // Count contributions from events
-    events.forEach((event) => {
-      const eventDate = new Date(event.created_at).toISOString().split("T")[0]
-      if (contributions.hasOwnProperty(eventDate)) {
-        if (event.type === "PushEvent" || event.type === "CreateEvent" || event.type === "PullRequestEvent") {
-          contributions[eventDate]++
-        }
+    // Fill in actual contribution data
+    data.forEach((row) => {
+      const dateStr = row.date
+      if (contributions.hasOwnProperty(dateStr)) {
+        contributions[dateStr] = row.contribution_count || 0
       }
     })
 
     return contributions
-  }
-
-  const generateMockContributions = () => {
-    const contributions = {}
-    const startDate = new Date("2025-06-01")
-    const endDate = new Date("2025-12-31")
-
-    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
-      const dateStr = d.toISOString().split("T")[0]
-      // Generate random contributions (0-4) with higher probability for weekdays
-      const isWeekend = d.getDay() === 0 || d.getDay() === 6
-      const maxContributions = isWeekend ? 2 : 4
-      contributions[dateStr] = Math.floor(Math.random() * (maxContributions + 1))
-    }
-
-    return contributions
-  }
-
-  const getContributionColor = (count) => {
-    if (count === 0) return "bg-gray-100 border-gray-200"
-    if (count === 1) return "bg-yellow-200 border-yellow-300"
-    if (count === 2) return "bg-yellow-500 border-yellow-600"
-    if (count === 3) return "bg-red-500 border-red-600"
-    return "bg-red-600 border-red-700"
   }
 
   const renderContributionGraph = () => {
@@ -311,36 +295,69 @@ function CodeSection() {
     const months = ["Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-    // Group contributions by week
+    // Create weeks array starting from June 1, 2025
     const weeks = []
     const startDate = new Date("2025-06-01")
 
-    // Find the first Sunday
+    // Find the Sunday of the week containing June 1st
     const firstSunday = new Date(startDate)
-    firstSunday.setDate(startDate.getDate() - startDate.getDay())
+    const dayOfWeek = startDate.getDay()
+    firstSunday.setDate(startDate.getDate() - dayOfWeek)
 
     const currentDate = new Date(firstSunday)
     const endDate = new Date("2025-12-31")
 
+    // Generate weeks until we cover all of December
     while (currentDate <= endDate) {
       const week = []
       for (let i = 0; i < 7; i++) {
         const dateStr = currentDate.toISOString().split("T")[0]
         const count = githubData[dateStr] || 0
-        week.push({ date: dateStr, count, day: currentDate.getDay() })
+        const isInRange = currentDate >= new Date("2025-06-01") && currentDate <= new Date("2025-12-31")
+
+        week.push({
+          date: dateStr,
+          count: isInRange ? count : 0,
+          day: currentDate.getDay(),
+          inRange: isInRange,
+        })
         currentDate.setDate(currentDate.getDate() + 1)
       }
       weeks.push(week)
     }
 
+    // Calculate month positions based on actual weeks
+    const monthPositions = []
+    let currentMonth = -1
+    weeks.forEach((week, weekIndex) => {
+      const firstDayOfWeek = week.find((day) => day.inRange)
+      if (firstDayOfWeek) {
+        const monthNum = new Date(firstDayOfWeek.date).getMonth()
+        if (monthNum !== currentMonth && monthNum >= 5 && monthNum <= 11) {
+          // Jun (5) to Dec (11)
+          currentMonth = monthNum
+          monthPositions.push({
+            month: months[monthNum - 5], // Adjust index since we start from June
+            weekIndex: weekIndex,
+          })
+        }
+      }
+    })
+
     return (
       <div className="overflow-x-auto">
         <div className="min-w-[600px]">
           {/* Month labels */}
-          <div className="flex mb-2 ml-8">
-            {months.map((month, index) => (
-              <div key={month} className="text-xs font-mono w-[85px] text-center">
-                {month}
+          <div className="flex mb-2 ml-8 relative h-4">
+            {monthPositions.map((monthInfo, index) => (
+              <div
+                key={monthInfo.month}
+                className="text-xs font-mono absolute"
+                style={{
+                  left: `${monthInfo.weekIndex * 16}px`, // 16px = 12px width + 4px margin
+                }}
+              >
+                {monthInfo.month}
               </div>
             ))}
           </div>
@@ -363,7 +380,9 @@ function CodeSection() {
                   {week.map((day, dayIndex) => (
                     <div
                       key={day.date}
-                      className={`w-3 h-3 border ${getContributionColor(day.count)} mb-[2px]`}
+                      className={`w-3 h-3 border mb-[2px] ${
+                        day.inRange ? getContributionColor(day.count) : "bg-gray-50 border-gray-100"
+                      }`}
                       title={`${day.date}: ${day.count} contributions`}
                     />
                   ))}
@@ -374,6 +393,30 @@ function CodeSection() {
         </div>
       </div>
     )
+  }
+
+  const generateMockContributions = () => {
+    const contributions = {}
+    const startDate = new Date("2025-06-01") // Match the actual date range
+    const endDate = new Date("2025-12-31")
+
+    for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      const dateStr = d.toISOString().split("T")[0]
+      // Generate random contributions (0-4) with higher probability for weekdays
+      const isWeekend = d.getDay() === 0 || d.getDay() === 6
+      const maxContributions = isWeekend ? 2 : 4
+      contributions[dateStr] = Math.floor(Math.random() * (maxContributions + 1))
+    }
+
+    return contributions
+  }
+
+  const getContributionColor = (count) => {
+    if (count === 0) return "bg-gray-100 border-gray-200"
+    if (count === 1) return "bg-yellow-200 border-yellow-300"
+    if (count === 2) return "bg-yellow-500 border-yellow-600"
+    if (count === 3) return "bg-red-500 border-red-600"
+    return "bg-red-600 border-red-700"
   }
 
   const totalContributions = githubData ? Object.values(githubData).reduce((sum, count) => sum + count, 0) : 0
@@ -613,7 +656,7 @@ function BooksSection() {
                   <span>{item.genre}</span>
                   <span>{item.count} books</span>
                 </div>
-                <div className="bg-gray-200 h-6 border-2 border-black">
+                <div className="bg-gray-200 h-6 border-4 border-black">
                   <div className={`${item.color} h-full`} style={{ width: `${(item.count / booksRead) * 100}%` }}></div>
                 </div>
               </div>
@@ -638,6 +681,7 @@ function BooksSection() {
 
 function FitnessSection() {
   const [workoutData, setWorkoutData] = useState({})
+  const [rawWorkoutData, setRawWorkoutData] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -656,161 +700,198 @@ function FitnessSection() {
     { exercise: "Push-ups", value: "22 reps", date: "Aug 2024" },
   ]
 
-  useEffect(() => {
-    const fetchWorkoutData = async () => {
-      try {
-        const { createClient } = await import("@supabase/supabase-js")
-        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
+  const fetchWorkoutData = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("workout_sessions")
+        .select("date, workout_type, duration_minutes")
+        .gte("date", "2025-01-01")
+        .lte("date", "2025-12-31")
+        .order("date", { ascending: true })
 
-        const { data, error } = await supabase
-          .from("workout_sessions")
-          .select("date, workout_type")
-          .gte("date", "2025-05-01")
-          .lte("date", "2025-12-31")
-          .order("date", { ascending: true })
-
-        if (error) {
-          throw error
-        }
-
-        // Transform the data into the format needed for the calendar
-        const transformedData = transformWorkoutData(data)
-        setWorkoutData(transformedData)
-
-        // Calculate workout type hours (assuming 1 hour per session)
-        const typeHours = calculateWorkoutTypeHours(data)
-        setWorkoutTypes((prev) =>
-          prev.map((type) => ({
-            ...type,
-            hours: typeHours[type.type.toLowerCase()] || 0,
-          })),
-        )
-      } catch (err) {
-        console.error("Error fetching workout data:", err)
-        setError(err.message)
-        // Fallback to empty data
-        setWorkoutData({})
-      } finally {
-        setLoading(false)
+      if (error) {
+        throw error
       }
-    }
 
+      setRawWorkoutData(data)
+
+      // Create a simple date map
+      const dateMap = {}
+      data.forEach((session) => {
+        dateMap[session.date] = {
+          type: session.workout_type.toLowerCase(),
+          duration: session.duration_minutes || 60,
+        }
+      })
+      setWorkoutData(dateMap)
+
+      // Calculate workout type hours
+      const typeHours = calculateWorkoutTypeHours(data)
+      setWorkoutTypes((prev) =>
+        prev.map((type) => ({
+          ...type,
+          hours: typeHours[type.type.toLowerCase()] || 0,
+        })),
+      )
+    } catch (err) {
+      console.error("Error fetching workout data:", err)
+      setError(err.message)
+      setWorkoutData({})
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchWorkoutData()
   }, [])
 
-  const transformWorkoutData = (data) => {
-    // Create a map of dates to workout types
-    const dateMap = {}
-    data.forEach((session) => {
-      dateMap[session.date] = session.workout_type.toLowerCase()
-    })
-
-    // Create the month/week structure
-    const months = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    const result = {}
-
-    months.forEach((month) => {
-      result[month] = []
-
-      // Get the first day of the month
-      const monthIndex = months.indexOf(month) + 5 // May = 5, Jun = 6, etc.
-      const year = 2025
-      const firstDay = new Date(year, monthIndex - 1, 1)
-
-      // Find the first Monday of the grid for this month
-      const firstMonday = new Date(firstDay)
-
-      const dayOfWeek = firstDay.getDay()
-      const daysToFirstMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-      firstMonday.setDate(firstDay.getDate() - daysToFirstMonday)
-
-      // Generate weeks for this month (4 weeks per month for grid consistency)
-      for (let week = 0; week < 4; week++) {
-        const weekData = []
-        for (let day = 0; day < 7; day++) {
-          const currentDate = new Date(firstMonday)
-          currentDate.setDate(firstMonday.getDate() + week * 7 + day)
-
-          const dateStr = currentDate.toISOString().split("T")[0]
-          const workoutType = dateMap[dateStr]
-
-          // Map workout types to numbers
-          let workoutNum = 0
-          if (workoutType === "cardio") workoutNum = 1
-          else if (workoutType === "hiit") workoutNum = 2
-          else if (workoutType === "strength") workoutNum = 3
-          else if (workoutType === "yoga") workoutNum = 4
-
-          weekData.push(workoutNum)
-        }
-        result[month].push(weekData)
-      }
-    })
-
-    return result
-  }
-
   const calculateWorkoutTypeHours = (data) => {
-    const hours = { strength: 0, cardio: 0, yoga: 0, hiit: 0 }
+    const minutes = { strength: 0, cardio: 0, yoga: 0, hiit: 0 }
     data.forEach((session) => {
       const type = session.workout_type.toLowerCase()
-      if (hours.hasOwnProperty(type)) {
-        hours[type] += 1 // Assuming 1 hour per session
+      if (minutes.hasOwnProperty(type)) {
+        minutes[type] += session.duration_minutes || 60
       }
     })
+
+    const hours = {}
+    Object.keys(minutes).forEach((type) => {
+      hours[type] = Math.round((minutes[type] / 60) * 10) / 10
+    })
+
     return hours
   }
 
-  // Days of the week
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+  const renderWorkoutGrid = () => {
+    if (!workoutData) return null
 
-  // Months (starting from May 2025)
-  const months = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const months = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
-  // Helper function to get color class based on workout type
-  const getWorkoutTypeColor = (type) => {
-    switch (type) {
-      case 0:
-        return "bg-gray-100 border-gray-200"
-      case 1:
-        return "bg-red-600 border-red-700" // Cardio
-      case 2:
-        return "bg-black border-gray-800" // HIIT
-      case 3:
-        return "bg-blue-600 border-blue-700" // Strength
-      case 4:
-        return "bg-yellow-500 border-yellow-600" // Yoga
+    // Create weeks array starting from May 1, 2025
+    const weeks = []
+    const startDate = new Date("2025-05-01")
+
+    // Find the Sunday of the week containing May 1st
+    const firstSunday = new Date(startDate)
+    const dayOfWeek = startDate.getDay()
+    firstSunday.setDate(startDate.getDate() - dayOfWeek)
+
+    const currentDate = new Date(firstSunday)
+    const endDate = new Date("2025-12-31")
+
+    // Generate weeks until we cover all of December
+    while (currentDate <= endDate) {
+      const week = []
+      for (let i = 0; i < 7; i++) {
+        const dateStr = currentDate.toISOString().split("T")[0]
+        const workout = workoutData[dateStr]
+        const isInRange = currentDate >= new Date("2025-05-01") && currentDate <= new Date("2025-12-31")
+        const today = new Date()
+        const isInFuture = currentDate > today
+
+        week.push({
+          date: dateStr,
+          workout: workout,
+          day: currentDate.getDay(),
+          inRange: isInRange,
+          inFuture: isInFuture,
+        })
+        currentDate.setDate(currentDate.getDate() + 1)
+      }
+      weeks.push(week)
+    }
+
+    // Calculate month positions based on actual weeks
+    const monthPositions = []
+    let currentMonth = -1
+    weeks.forEach((week, weekIndex) => {
+      const firstDayOfWeek = week.find((day) => day.inRange)
+      if (firstDayOfWeek) {
+        const monthNum = new Date(firstDayOfWeek.date).getMonth()
+        if (monthNum !== currentMonth && monthNum >= 4 && monthNum <= 11) {
+          // May (4) to Dec (11)
+          currentMonth = monthNum
+          monthPositions.push({
+            month: months[monthNum - 4], // Adjust index since we start from May
+            weekIndex: weekIndex,
+          })
+        }
+      }
+    })
+
+    return (
+      <div className="overflow-x-auto">
+        <div className="min-w-[600px]">
+          {/* Month labels */}
+          <div className="flex mb-2 ml-8 relative h-4">
+            {monthPositions.map((monthInfo, index) => (
+              <div
+                key={monthInfo.month}
+                className="text-xs font-mono absolute"
+                style={{
+                  left: `${monthInfo.weekIndex * 16}px`, // 16px = 12px width + 4px margin
+                }}
+              >
+                {monthInfo.month}
+              </div>
+            ))}
+          </div>
+
+          {/* Days and workout squares */}
+          <div className="flex">
+            {/* Day labels */}
+            <div className="flex flex-col mr-2">
+              {days.map((day, index) => (
+                <div key={day} className="h-3 text-xs font-mono flex items-center" style={{ marginBottom: "2px" }}>
+                  {index % 2 === 1 ? day.slice(0, 3) : ""}
+                </div>
+              ))}
+            </div>
+
+            {/* Workout grid */}
+            <div className="flex">
+              {weeks.map((week, weekIndex) => (
+                <div key={weekIndex} className="flex flex-col mr-1">
+                  {week.map((day, dayIndex) => (
+                    <div
+                      key={day.date}
+                      className={`w-3 h-3 border mb-[2px] ${getWorkoutGridColor(day)}`}
+                      title={`${day.date}: ${getWorkoutTitle(day.workout)}`}
+                    />
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const getWorkoutGridColor = (day) => {
+    if (!day.inRange || day.inFuture) return "bg-gray-50 border-gray-100"
+    if (!day.workout) return "bg-gray-100 border-gray-200"
+
+    switch (day.workout.type) {
+      case "cardio":
+        return "bg-red-600 border-red-700"
+      case "hiit":
+        return "bg-black border-gray-800"
+      case "strength":
+        return "bg-blue-600 border-blue-700"
+      case "yoga":
+        return "bg-yellow-500 border-yellow-600"
       default:
         return "bg-gray-100 border-gray-200"
     }
   }
 
-  // Helper function to calculate dates correctly across the entire grid
-  const getActualDate = (monthName, weekIndex, dayIndex) => {
-    const monthOrder = ["May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-    const monthPosition = monthOrder.indexOf(monthName)
-
-    let totalWeekIndex = 0
-    for (let i = 0; i < monthPosition; i++) {
-      totalWeekIndex += (workoutData[monthOrder[i]] || []).length
-    }
-    totalWeekIndex += weekIndex
-
-    const may1st = new Date(2025, 4, 1)
-    const firstDayOfWeek = may1st.getDay()
-    const daysToFirstMonday = firstDayOfWeek === 0 ? 6 : firstDayOfWeek - 1
-
-    const firstMonday = new Date(may1st)
-    firstMonday.setDate(may1st.getDate() - daysToFirstMonday)
-
-    const actualDate = new Date(firstMonday)
-    actualDate.setDate(firstMonday.getDate() + totalWeekIndex * 7 + dayIndex)
-
-    return actualDate.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    })
+  const getWorkoutTitle = (workout) => {
+    if (!workout) return "No workout"
+    const typeName = workout.type.charAt(0).toUpperCase() + workout.type.slice(1)
+    return `${typeName} (${workout.duration}min)`
   }
 
   if (loading) {
@@ -842,47 +923,62 @@ function FitnessSection() {
       <div className="bg-white border-4 border-black p-6">
         <h3 className="text-xl font-bold mb-6">WORKOUT SESSIONS</h3>
 
-        <div className="overflow-x-auto pb-4">
-          <div className="min-w-[600px] max-w-full">
-            <div className="relative">
-              {/* Month headers */}
-              <div className="flex ml-[80px]">
-                {months.map((month, monthIndex) => (
-                  <div key={monthIndex} className="text-center font-bold text-sm" style={{ width: "100px" }}>
-                    {month}
+        {renderWorkoutGrid()}
+
+        <div className="mt-4">
+          <div className="text-xs font-mono text-gray-600 mb-4">May - December 2025</div>
+
+          {/* Legend for workout types */}
+          <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-red-600 border border-red-700"></div>
+              <span className="text-xs font-mono">Cardio</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-black border border-gray-800"></div>
+              <span className="text-xs font-mono">HIIT</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-blue-600 border border-blue-700"></div>
+              <span className="text-xs font-mono">Strength</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-4 h-4 bg-yellow-500 border border-yellow-600"></div>
+              <span className="text-xs font-mono">Yoga</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6 mt-8">
+          <div>
+            <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">WORKOUT TYPES (HOURS)</h3>
+            <div className="space-y-4">
+              {workoutTypes.map((workout, index) => (
+                <div key={index} className="space-y-1">
+                  <div className="flex justify-between items-center font-mono">
+                    <span>{workout.type}</span>
+                    <span>{workout.hours}h</span>
                   </div>
-                ))}
-              </div>
+                  <div className="bg-white h-8 border-4 border-black flex items-center w-full">
+                    <div
+                      className={`${workout.color} h-full`}
+                      style={{ width: `${Math.min((workout.hours / 20) * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
-              {/* Days of the week with workout squares */}
-              {days.map((day, dayIndex) => (
-                <div key={day} className="flex items-center mt-1">
-                  <div className="w-[80px] font-bold text-sm">{day}</div>
-                  <div className="flex">
-                    {Object.keys(workoutData).map((month) =>
-                      (workoutData[month] || []).map((week, weekIndex) => {
-                        const actualDate = getActualDate(month, weekIndex, dayIndex)
-                        const workoutType = week[dayIndex] || 0
-                        const workoutName =
-                          workoutType === 1
-                            ? "Cardio"
-                            : workoutType === 2
-                              ? "HIIT"
-                              : workoutType === 3
-                                ? "Strength"
-                                : workoutType === 4
-                                  ? "Yoga"
-                                  : "No workout"
-
-                        return (
-                          <div
-                            key={`${month}-${weekIndex}-${dayIndex}`}
-                            className={`w-6 h-6 border mx-[1px] ${getWorkoutTypeColor(workoutType)}`}
-                            title={`${actualDate}: ${workoutName}`}
-                          ></div>
-                        )
-                      }),
-                    )}
+          <div className="bg-white border-4 border-black p-6">
+            <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">PERSONAL BESTS</h3>
+            <div className="space-y-4">
+              {personalBests.map((pb, index) => (
+                <div key={index} className="flex justify-between items-center border-b border-gray-200 pb-2">
+                  <span className="font-bold">{pb.exercise}</span>
+                  <div className="text-right">
+                    <div className="font-mono text-lg">{pb.value}</div>
+                    <div className="text-xs font-mono text-gray-600">{pb.date}</div>
                   </div>
                 </div>
               ))}
@@ -890,312 +986,172 @@ function FitnessSection() {
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-end mt-4 gap-2">
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-red-600 border border-red-700"></div>
-            <span className="text-xs font-mono">Cardio</span>
+        <div className="bg-blue-600 text-white border-4 border-black p-6 mt-8">
+          <h3 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">CURRENT FOCUS</h3>
+          <div className="bg-white text-black border-2 border-black p-4">
+            <h4 className="font-bold">Devils Circuit Training</h4>
+            <p className="font-mono text-sm mt-2">
+              Training for the Devils Circuit obstacle race in Bengaluru on December 21st, 2025.
+            </p>
+            <div className="mt-4 bg-gray-200 h-4 border-2 border-black">
+              <div className="bg-blue-600 h-full" style={{ width: "15%" }}></div>
+            </div>
+            <p className="mt-2 font-mono text-sm text-right">15% complete</p>
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-black border border-gray-800"></div>
-            <span className="text-xs font-mono">HIIT</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-blue-600 border border-blue-700"></div>
-            <span className="text-xs font-mono">Strength</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-4 h-4 bg-yellow-500 border border-yellow-600"></div>
-            <span className="text-xs font-mono">Yoga</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">WORKOUT TYPES (MONTHLY)</h3>
-          <div className="space-y-4">
-            {workoutTypes.map((workout, index) => (
-              <div key={index} className="space-y-1">
-                <div className="flex justify-between items-center font-mono">
-                  <span>{workout.type}</span>
-                  <span>{workout.hours} sessions</span>
-                </div>
-                <div className="bg-white h-8 border-4 border-black flex items-center w-full">
-                  <div
-                    className={`${workout.color} h-full`}
-                    style={{ width: `${Math.min((workout.hours / 20) * 100, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white border-4 border-black p-6">
-          <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">PERSONAL BESTS</h3>
-          <div className="space-y-4">
-            {personalBests.map((pb, index) => (
-              <div key={index} className="flex justify-between items-center border-b border-gray-200 pb-2">
-                <span className="font-bold">{pb.exercise}</span>
-                <div className="text-right">
-                  <div className="font-mono text-lg">{pb.value}</div>
-                  <div className="text-xs font-mono text-gray-600">{pb.date}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-blue-600 text-white border-4 border-black p-6">
-        <h3 className="text-xl font-bold mb-4 border-b-2 border-white pb-2">CURRENT FOCUS</h3>
-        <div className="bg-white text-black border-2 border-black p-4">
-          <h4 className="font-bold">Devils Circuit Training</h4>
-          <p className="font-mono text-sm mt-2">
-            Training for the Devils Circuit obstacle race in Bengaluru on December 21st, 2025.
-          </p>
-          <div className="mt-4 bg-gray-200 h-4 border-2 border-black">
-            <div className="bg-blue-600 h-full" style={{ width: "15%" }}></div>
-          </div>
-          <p className="mt-2 font-mono text-sm text-right">15% complete</p>
         </div>
       </div>
     </div>
   )
 }
 
-function ScubaSection() {
-  const [recentDives, setRecentDives] = useState([])
+function CookingSection() {
+  const [recentRecipes, setRecentRecipes] = useState<
+    { name: string; link: string; date: string; rating: number; notes: string }[]
+  >([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [error, setError] = useState<string | null>(null)
 
-  // Updated stats
-  const totalDives = 28
-  const divesThisYear = 12
-  const diveSitesVisited = 23
-  const certifications = ["Open Water", "Advanced Open Water"]
+  const cookingGoals = [
+    { goal: "Experiment with air-fryer recipes", progress: 35, color: "bg-yellow-500" },
+    { goal: "Explore making butter and ghee from scratch", progress: 10, color: "bg-blue-600" },
+    { goal: "Learn traditional Konkani recipes", progress: 20, color: "bg-red-600" },
+    { goal: "Build personal recipe database", progress: 15, color: "bg-black" },
+  ]
 
   useEffect(() => {
-    const fetchRecentDives = async () => {
+    const fetchRecentRecipes = async () => {
+      const fallback = [
+        {
+          name: "Honey Chilli Paneer Fries",
+          link: "https://www.instagram.com/reel/DAYQGCvIuQH/?igsh=MWZpbjIyemFtcGhpMg==",
+          date: "June 5 2025",
+          rating: 5,
+          notes: "Perfect fusion of Indo-Chinese flavours with crispy fries!",
+        },
+        {
+          name: "Malai Broccoli",
+          link: "https://www.facebook.com/share/r/19Hco4TFjK/",
+          date: "May 28 2025",
+          rating: 4,
+          notes: "Creamy and flavourful — a great way to make broccoli exciting.",
+        },
+        {
+          name: "Cheesy Stuffed Mushroom",
+          link: "https://www.instagram.com/reel/DHa2d_Ev6Hj/?igsh=NncxcDZ6eml1MHRq",
+          date: "May 15 2025",
+          rating: 5,
+          notes: "Amazing appetiser — perfect for entertaining guests.",
+        },
+        {
+          name: "Paneer Tikka Masala",
+          link: "https://www.example.com/paneer-tikka",
+          date: "May 1 2025",
+          rating: 4,
+          notes: "Rich and creamy curry with perfectly spiced paneer.",
+        },
+      ]
+
       try {
-        const { createClient } = await import("@supabase/supabase-js")
-
-        const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!)
-
         const { data, error } = await supabase
-          .from("scuba_dives")
-          .select("location, dive_site, date, max_depth_meters, duration_minutes, highlights")
-          .order("date", { ascending: false })
-          .limit(3)
+          .from("recipes_tried")
+          .select("recipe_name, recipe_link, date_tried, rating, notes")
+          .order("date_tried", { ascending: false })
+          .limit(4)
 
-        if (error) {
-          throw error
+        if (error || !data?.length) {
+          setRecentRecipes(fallback)
+        } else {
+          const formatted = data.map((r) => ({
+            name: r.recipe_name,
+            link: r.recipe_link,
+            date: new Date(r.date_tried).toLocaleDateString("en-US", {
+              month: "long",
+              day: "numeric",
+              year: "numeric",
+            }),
+            rating: r.rating ?? 0,
+            notes: r.notes ?? "",
+          }))
+          setRecentRecipes(formatted)
         }
-
-        // Format the data for display
-        const formattedDives = data.map((dive) => ({
-          location: dive.dive_site ? `${dive.dive_site}, ${dive.location}` : dive.location,
-          date: new Date(dive.date).toLocaleDateString("en-US", {
-            month: "long",
-            day: "numeric",
-            year: "numeric",
-          }),
-          depth: dive.max_depth_meters ? `${dive.max_depth_meters}m` : "N/A",
-          duration: dive.duration_minutes ? `${dive.duration_minutes} min` : "N/A",
-          highlights: dive.highlights || "Great dive experience",
-        }))
-
-        setRecentDives(formattedDives)
-      } catch (err) {
-        console.error("Error fetching dives:", err)
-        setError(err.message)
-        // Fallback to static data if Supabase fails
-        setRecentDives([
-          {
-            location: "Busy Buro, Neil Island, Andamans",
-            date: "March 29, 2025",
-            depth: "23m",
-            duration: "51 min",
-            highlights: "Spotted Octopus, Unicorn fish, clown fish",
-          },
-          {
-            location: "Romba, Neil Island, Andamans",
-            date: "March 29, 2025",
-            depth: "25m",
-            duration: "36 min",
-            highlights: "Spotted Blue spotted stringrays, Sweet lips, Moray eel",
-          },
-          {
-            location: "Aquarium, Neil Island, Andamans",
-            date: "March 29, 2025",
-            depth: "23m",
-            duration: "51 min",
-            highlights: "Spotted banded sea krait, groupers, fusiliers",
-          },
-        ])
+      } catch (e: any) {
+        console.error(e)
+        setError(e.message)
+        setRecentRecipes(fallback)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchRecentDives()
+    fetchRecentRecipes()
   }, [])
-
-  const marineLifeSpotted = [
-    "Reef Sharks",
-    "Sting Rays",
-    "Moray Eels",
-    "Clownfish",
-    "Turtles",
-    "Octopus",
-    "Barracuda",
-    "Lionfish",
-  ]
 
   return (
     <div className="space-y-8">
+      {/* cooking goals */}
       <div className="grid md:grid-cols-3 gap-6">
-        <div className="bg-yellow-500 border-4 border-black p-6">
-          <h3 className="text-xl font-bold mb-4">DIVE STATS</h3>
+        <div className="bg-white border-4 border-black p-6">
+          <h3 className="text-xl font-bold mb-4">COOKING GOALS 2025</h3>
           <div className="space-y-4">
-            <div className="bg-white border-2 border-black p-4">
-              <div className="text-center">
-                <div className="text-5xl font-black">{totalDives}</div>
-                <p className="font-mono mt-1">Total Dives</p>
+            {cookingGoals.map((goal) => (
+              <div key={goal.goal} className="space-y-1">
+                <div className="flex justify-between font-mono text-sm">
+                  <span>{goal.goal}</span>
+                  <span className="font-bold">{goal.progress}%</span>
+                </div>
+                <div className="bg-gray-200 h-4 border-2 border-black">
+                  <div className={`${goal.color} h-full`} style={{ width: `${goal.progress}%` }} />
+                </div>
               </div>
-            </div>
-            <div className="bg-white border-2 border-black p-4">
-              <div className="text-center">
-                <div className="text-5xl font-black">{divesThisYear}</div>
-                <p className="font-mono mt-1">Dives in 2025</p>
-              </div>
-            </div>
-            <div className="bg-white border-2 border-black p-4">
-              <div className="text-center">
-                <div className="text-5xl font-black">{diveSitesVisited}</div>
-                <p className="font-mono mt-1">Dive Sites Visited</p>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
+        {/* recently tried recipes */}
         <div className="md:col-span-2">
-          <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">RECENT DIVES</h3>
+          <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">RECENTLY TRIED RECIPES</h3>
 
           {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="font-mono">Loading recent dives...</div>
-            </div>
-          ) : error ? (
-            <div className="bg-red-100 border-4 border-red-600 p-4">
-              <p className="font-mono text-red-800">Error loading dives: {error}</p>
-              <p className="font-mono text-sm text-red-600 mt-2">Showing fallback data</p>
-            </div>
-          ) : null}
+            <div className="flex items-center justify-center h-32 font-mono">Loading…</div>
+          ) : (
+            <>
+              {error && (
+                <div className="bg-yellow-100 border-4 border-yellow-600 p-4 mb-4 font-mono text-sm text-yellow-700">
+                  {error}
+                </div>
+              )}
 
-          <div className="space-y-4">
-            {recentDives.map((dive, index) => (
-              <div key={index} className="bg-white border-4 border-black p-4 shadow-brutal">
-                <h4 className="font-bold text-lg">{dive.location}</h4>
-                <div className="grid grid-cols-3 gap-2 mt-2 mb-3">
-                  <div className="text-center border-r border-gray-300">
-                    <div className="text-xs font-mono text-gray-600">Date</div>
-                    <div className="font-mono">{dive.date}</div>
+              <div className="grid sm:grid-cols-2 gap-4">
+                {recentRecipes.map((r) => (
+                  <div key={r.name} className="bg-white border-4 border-black p-4 shadow-brutal">
+                    <div className="flex justify-between mb-2">
+                      <h4 className="font-bold text-sm">{r.name}</h4>
+                      <div className="flex">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-3 w-3 ${i < r.rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="font-mono text-xs mb-1">{r.date}</p>
+                    <p className="font-mono text-xs mb-2">{r.notes}</p>
+                    <a
+                      href={r.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-blue-600 text-white border-2 border-black px-3 py-1 text-xs font-bold inline-block"
+                    >
+                      VIEW RECIPE
+                    </a>
                   </div>
-                  <div className="text-center border-r border-gray-300">
-                    <div className="text-xs font-mono text-gray-600">Depth</div>
-                    <div className="font-mono">{dive.depth}</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-xs font-mono text-gray-600">Duration</div>
-                    <div className="font-mono">{dive.duration}</div>
-                  </div>
-                </div>
-                <div className="border-t border-gray-300 pt-2">
-                  <div className="text-xs font-mono text-gray-600">Highlights</div>
-                  <p className="font-mono text-sm">{dive.highlights}</p>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </>
+          )}
         </div>
       </div>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        <div>
-          <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">CERTIFICATIONS</h3>
-          <div className="space-y-4">
-            {certifications.map((cert, index) => (
-              <div key={index} className="bg-white border-4 border-black p-4 flex items-center gap-4 shadow-brutal">
-                <div className="h-12 w-12 bg-blue-600 text-white flex items-center justify-center font-bold text-xl rounded-full border-2 border-black">
-                  {index + 1}
-                </div>
-                <div>
-                  <h4 className="font-bold">{cert}</h4>
-                  <p className="text-sm font-mono">
-                    {index === 0 ? "Certified: December 2023" : index === 1 ? "Certified: April 2024" : ""}
-                  </p>
-                </div>
-              </div>
-            ))}
-            <div className="bg-gray-100 border-4 border-dashed border-black p-4 flex items-center gap-4">
-              <div className="h-12 w-12 bg-gray-300 flex items-center justify-center font-bold text-xl rounded-full border-2 border-black">
-                ?
-              </div>
-              <div>
-                <h4 className="font-bold">Next: Dry Suit Diving</h4>
-                <p className="text-sm font-mono">Planned for November 2025</p>
-              </div>
-            </div>
-
-            <div className="bg-gray-100 border-4 border-dashed border-black p-4 flex items-center gap-4 mt-4">
-              <div className="h-12 w-12 bg-gray-300 flex items-center justify-center font-bold text-xl rounded-full border-2 border-black">
-                ?
-              </div>
-              <div>
-                <h4 className="font-bold">Next: Nitrox Specialty</h4>
-                <p className="text-sm font-mono">Planned for January 2026</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">MARINE LIFE SPOTTED</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {marineLifeSpotted.map((creature, index) => (
-              <div key={index} className="bg-white border-2 border-black p-3 flex items-center gap-2 shadow-brutal">
-                <Waves className="h-5 w-5 text-blue-600" />
-                <span className="font-mono">{creature}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="mt-6">
-            <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">BUCKET LIST</h3>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-4 border-2 border-black"></div>
-                <span className="font-mono">Great Barrier Reef, Australia</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-4 border-2 border-black"></div>
-                <span className="font-mono">Raja Ampat, Indonesia</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-4 border-2 border-black"></div>
-                <span className="font-mono">Shark cage diving, Africa</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-4 w-4 border-2 border-black"></div>
-                <span className="font-mono">Freediving, Indonesia</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-8"></div>
     </div>
   )
 }

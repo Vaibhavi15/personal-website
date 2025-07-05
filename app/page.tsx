@@ -111,8 +111,8 @@ export default function HomePage() {
 
                   <p>
                     When I'm not building or mentoring, you'll find me exploring local food stops for my food project
-                    Ahaa! Ahaara, scuba diving in both new and familiar waters, or fiercely competing in a board game
-                    with friends.
+                    Ahaa! Ahaara, experimenting with new recipes and hosting elaborate grazing tables, or fiercely
+                    competing in a board game with friends.
                   </p>
                 </div>
               </div>
@@ -181,10 +181,10 @@ export default function HomePage() {
                     <li className="flex items-start gap-3">
                       <div className="h-6 w-6 bg-white mt-1 flex-shrink-0"></div>
                       <span>
-                        <Link href="/play/open?tab=scuba" className="underline hover:text-yellow-300">
-                          Advanced Open Water Diver
+                        <Link href="/play/open?tab=cooking" className="underline hover:text-yellow-300">
+                          Culinary Enthusiast
                         </Link>{" "}
-                        – 28 dives across diverse destinations.
+                        – Host elaborate grazing tables and experiment with global cuisines.
                       </span>
                     </li>
                     <li className="flex items-start gap-3">
@@ -222,8 +222,7 @@ export default function HomePage() {
                 LIVING OPENLY
               </h2>
               <p className="text-xl font-mono max-w-3xl">
-                Tracking my journey through code, books, fitness, and scuba diving with full transparency and
-                accountability.
+                Tracking my journey through code, books, fitness, and cooking with full transparency and accountability.
               </p>
 
               <div className="grid gap-8 md:grid-cols-2">
@@ -255,9 +254,9 @@ export default function HomePage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="h-8 w-8 bg-yellow-500"></div>
-                        <span className="font-bold">Scuba Dives</span>
+                        <span className="font-bold">Recipes Tried</span>
                       </div>
-                      <span className="text-2xl font-black">28</span>
+                      <span className="text-2xl font-black">15</span>
                     </div>
                   </div>
                 </div>
@@ -288,7 +287,7 @@ export default function HomePage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="h-4 w-4 bg-yellow-500"></div>
-                        <span>Completed a Komodo scuba liveaboard trip</span>
+                        <span>Planning next grazing table theme</span>
                       </div>
                     </div>
                   </div>
@@ -304,7 +303,7 @@ export default function HomePage() {
                   <div className="bg-white border-4 border-black p-4">
                     <h4 className="font-bold text-lg mb-2">CODE</h4>
                     <p className="font-mono text-sm">
-                      5 active projects including AI accountability bot and microlearning app
+                      5 active projects including AI accountability bot and personalized meal planner
                     </p>
                   </div>
                   <div className="bg-white border-4 border-black p-4">
@@ -316,7 +315,7 @@ export default function HomePage() {
                   <div className="bg-white border-4 border-black p-4">
                     <h4 className="font-bold text-lg mb-2">ADVENTURES</h4>
                     <p className="font-mono text-sm">
-                      Recent dives in Komodo & Andamans, training for obstacle race, completed scuba liveaboard in Indonesia
+                      Recent travel to Indonesia, training for obstacle race, hosted elaborate grazing table
                     </p>
                   </div>
                 </div>
