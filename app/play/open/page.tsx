@@ -346,15 +346,15 @@ function CodeSection() {
 
     return (
       <div className="overflow-x-auto">
-        <div className="min-w-[600px]">
+        <div className="min-w-[400px] sm:min-w-[600px]">
           {/* Month labels */}
-          <div className="flex mb-2 ml-8 relative h-4">
+          <div className="flex mb-2 ml-6 sm:ml-8 relative h-4">
             {monthPositions.map((monthInfo, index) => (
               <div
                 key={monthInfo.month}
                 className="text-xs font-mono absolute"
                 style={{
-                  left: `${monthInfo.weekIndex * 16}px`, // 16px = 12px width + 4px margin
+                  left: `${monthInfo.weekIndex * (window.innerWidth < 640 ? 12 : 16)}px`,
                 }}
               >
                 {monthInfo.month}
@@ -365,10 +365,14 @@ function CodeSection() {
           {/* Days and contribution squares */}
           <div className="flex">
             {/* Day labels */}
-            <div className="flex flex-col mr-2">
+            <div className="flex flex-col mr-1 sm:mr-2">
               {days.map((day, index) => (
-                <div key={day} className="h-3 text-xs font-mono flex items-center" style={{ marginBottom: "2px" }}>
-                  {index % 2 === 1 ? day.slice(0, 3) : ""}
+                <div
+                  key={day}
+                  className="h-2 sm:h-3 text-xs font-mono flex items-center"
+                  style={{ marginBottom: "1px" }}
+                >
+                  {index % 2 === 1 ? day.slice(0, 2) : ""}
                 </div>
               ))}
             </div>
@@ -376,11 +380,11 @@ function CodeSection() {
             {/* Contribution grid */}
             <div className="flex">
               {weeks.map((week, weekIndex) => (
-                <div key={weekIndex} className="flex flex-col mr-1">
+                <div key={weekIndex} className="flex flex-col mr-0.5 sm:mr-1">
                   {week.map((day, dayIndex) => (
                     <div
                       key={day.date}
-                      className={`w-3 h-3 border mb-[2px] ${
+                      className={`w-2 h-2 sm:w-3 sm:h-3 border mb-[1px] sm:mb-[2px] ${
                         day.inRange ? getContributionColor(day.count) : "bg-gray-50 border-gray-100"
                       }`}
                       title={`${day.date}: ${day.count} contributions`}
@@ -452,14 +456,14 @@ function CodeSection() {
             {renderContributionGraph()}
             <div className="flex justify-between items-center mt-4">
               <div className="text-xs font-mono text-gray-600">June - December 2025</div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <span className="text-xs font-mono">Less</span>
-                <div className="flex gap-1">
-                  <div className="w-3 h-3 bg-gray-100 border border-gray-200"></div>
-                  <div className="w-3 h-3 bg-yellow-200 border border-yellow-300"></div>
-                  <div className="w-3 h-3 bg-yellow-500 border border-yellow-600"></div>
-                  <div className="w-3 h-3 bg-red-500 border border-red-600"></div>
-                  <div className="w-3 h-3 bg-red-600 border border-red-700"></div>
+                <div className="flex gap-0.5 sm:gap-1">
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-gray-100 border border-gray-200"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-200 border border-yellow-300"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-500 border border-yellow-600"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-500 border border-red-600"></div>
+                  <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-600 border border-red-700"></div>
                 </div>
                 <span className="text-xs font-mono">More</span>
               </div>
