@@ -473,13 +473,13 @@ function CodeSection() {
         <h3 className="text-xl font-bold mb-6 border-b-2 border-black pb-2">CURRENT PROJECTS</h3>
         <div className="grid gap-6">
           {currentProjects.map((project, index) => (
-            <div key={index} className="bg-white border-4 border-black p-6 shadow-brutal">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h4 className="font-bold text-lg">{project.name}</h4>
+            <div key={index} className="bg-white border-4 border-black p-4 sm:p-6 shadow-brutal">
+              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-4 gap-4">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                    <h4 className="font-bold text-base sm:text-lg break-words">{project.name}</h4>
                     <span
-                      className={`px-2 py-1 text-xs font-bold border-2 border-black ${
+                      className={`px-2 py-1 text-xs font-bold border-2 border-black self-start ${
                         project.status === "In Progress"
                           ? "bg-yellow-500"
                           : project.status === "Planning"
@@ -490,18 +490,21 @@ function CodeSection() {
                       {project.status}
                     </span>
                   </div>
-                  <p className="font-mono text-sm mb-3">{project.description}</p>
+                  <p className="font-mono text-sm mb-3 break-words">{project.description}</p>
                   <div className="flex flex-wrap gap-2">
                     {project.tech.map((tech, techIndex) => (
-                      <span key={techIndex} className="bg-gray-100 border border-black px-2 py-1 text-xs font-mono">
+                      <span
+                        key={techIndex}
+                        className="bg-gray-100 border border-black px-2 py-1 text-xs font-mono break-words"
+                      >
                         {tech}
                       </span>
                     ))}
                   </div>
                 </div>
-                <div className="ml-4 text-right">
+                <div className="flex-shrink-0 text-center lg:text-right lg:ml-4">
                   <div className="text-2xl font-black">{project.progress}%</div>
-                  <div className="w-20 bg-gray-200 h-3 border-2 border-black mt-1">
+                  <div className="w-20 bg-gray-200 h-3 border-2 border-black mt-1 mx-auto lg:mx-0">
                     <div className={`${project.color} h-full`} style={{ width: `${project.progress}%` }}></div>
                   </div>
                 </div>
