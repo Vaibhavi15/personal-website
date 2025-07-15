@@ -1008,49 +1008,51 @@ function FitnessSection() {
 }
 
 function CookingSection() {
-  const [recentRecipes, setRecentRecipes] = useState<
-    { name: string; link: string; date: string; rating: number; notes: string }[]
-  >([])
+  const [recentRecipes, setRecentRecipes] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState(null)
 
+  // Reverted cooking goals back to original theme colors
   const cookingGoals = [
-    { goal: "Experiment with air-fryer recipes", progress: 35, color: "bg-yellow-500" },
+    { goal: "Experiment with air fryer recipes", progress: 35, color: "bg-yellow-500" },
     { goal: "Explore making butter and ghee from scratch", progress: 10, color: "bg-blue-600" },
     { goal: "Learn traditional Konkani recipes", progress: 20, color: "bg-red-600" },
-    { goal: "Build personal recipe database", progress: 15, color: "bg-black" },
+    { goal: "Build recipe database", progress: 15, color: "bg-black" },
   ]
+
+  const grazingTablesHosted = 3
 
   useEffect(() => {
     const fetchRecentRecipes = async () => {
-      const fallback = [
+      // Always start with fallback data
+      const fallbackRecipes = [
         {
           name: "Honey Chilli Paneer Fries",
           link: "https://www.instagram.com/reel/DAYQGCvIuQH/?igsh=MWZpbjIyemFtcGhpMg==",
-          date: "June 5 2025",
+          date: "June 5, 2025",
           rating: 5,
-          notes: "Perfect fusion of Indo-Chinese flavours with crispy fries!",
+          notes: "Perfect fusion of Indo-Chinese flavors with crispy fries!",
         },
         {
           name: "Malai Broccoli",
           link: "https://www.facebook.com/share/r/19Hco4TFjK/",
-          date: "May 28 2025",
+          date: "May 28, 2025",
           rating: 4,
-          notes: "Creamy and flavourful — a great way to make broccoli exciting.",
+          notes: "Creamy and flavorful - a great way to make broccoli exciting",
         },
         {
           name: "Cheesy Stuffed Mushroom",
           link: "https://www.instagram.com/reel/DHa2d_Ev6Hj/?igsh=NncxcDZ6eml1MHRq",
-          date: "May 15 2025",
+          date: "May 15, 2025",
           rating: 5,
-          notes: "Amazing appetiser — perfect for entertaining guests.",
+          notes: "Amazing appetizer - perfect for entertaining guests",
         },
         {
           name: "Paneer Tikka Masala",
           link: "https://www.example.com/paneer-tikka",
-          date: "May 1 2025",
+          date: "May 1, 2025",
           rating: 4,
-          notes: "Rich and creamy curry with perfectly spiced paneer.",
+          notes: "Rich and creamy curry with perfectly spiced paneer",
         },
       ]
 
@@ -1061,26 +1063,38 @@ function CookingSection() {
           .order("date_tried", { ascending: false })
           .limit(4)
 
-        if (error || !data?.length) {
-          setRecentRecipes(fallback)
-        } else {
-          const formatted = data.map((r) => ({
-            name: r.recipe_name,
-            link: r.recipe_link,
-            date: new Date(r.date_tried).toLocaleDateString("en-US", {
+        if (error) {
+          console.error("Supabase query error:", error)
+          setError(`Supabase error: ${error.message}`)
+          setRecentRecipes(fallbackRecipes)
+          setLoading(false)
+          return
+        }
+
+        if (data && data.length > 0) {
+          // Format the data for display
+          const formattedRecipes = data.map((recipe) => ({
+            name: recipe.recipe_name,
+            link: recipe.recipe_link,
+            date: new Date(recipe.date_tried).toLocaleDateString("en-US", {
               month: "long",
               day: "numeric",
               year: "numeric",
             }),
-            rating: r.rating ?? 0,
-            notes: r.notes ?? "",
+            rating: recipe.rating || 0,
+            notes: recipe.notes || "Great recipe to try!",
           }))
-          setRecentRecipes(formatted)
+          setRecentRecipes(formattedRecipes)
+          setError(null)
+        } else {
+          console.log("No recipes found in database")
+          setError("No recipes found in database")
+          setRecentRecipes(fallbackRecipes)
         }
-      } catch (e: any) {
-        console.error(e)
-        setError(e.message)
-        setRecentRecipes(fallback)
+      } catch (err) {
+        console.error("Error in fetchRecentRecipes:", err)
+        setError(`Connection error: ${err.message}`)
+        setRecentRecipes(fallbackRecipes)
       } finally {
         setLoading(false)
       }
@@ -1091,60 +1105,66 @@ function CookingSection() {
 
   return (
     <div className="space-y-8">
-      {/* cooking goals */}
       <div className="grid md:grid-cols-3 gap-6">
         <div className="bg-white border-4 border-black p-6">
-          <h3 className="text-xl font-bold mb-4">COOKING GOALS 2025</h3>
+          <h3 className="text-xl font-bold mb-4 text-black">COOKING GOALS 2025</h3>
           <div className="space-y-4">
-            {cookingGoals.map((goal) => (
-              <div key={goal.goal} className="space-y-1">
-                <div className="flex justify-between font-mono text-sm">
-                  <span>{goal.goal}</span>
-                  <span className="font-bold">{goal.progress}%</span>
+            {cookingGoals.map((goal, index) => (
+              <div key={index} className="space-y-2">
+                <div className="flex justify-between items-start font-mono text-sm">
+                  <span className="text-xs leading-tight flex-1 pr-2">{goal.goal}</span>
+                  <span className="font-bold text-black">{goal.progress}%</span>
                 </div>
                 <div className="bg-gray-200 h-4 border-2 border-black">
-                  <div className={`${goal.color} h-full`} style={{ width: `${goal.progress}%` }} />
+                  <div className={`${goal.color} h-full`} style={{ width: `${goal.progress}%` }}></div>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* recently tried recipes */}
         <div className="md:col-span-2">
           <h3 className="text-xl font-bold mb-4 border-b-2 border-black pb-2">RECENTLY TRIED RECIPES</h3>
 
           {loading ? (
-            <div className="flex items-center justify-center h-32 font-mono">Loading…</div>
+            <div className="flex items-center justify-center h-32">
+              <div className="font-mono">Loading recent recipes...</div>
+            </div>
           ) : (
             <>
               {error && (
-                <div className="bg-yellow-100 border-4 border-yellow-600 p-4 mb-4 font-mono text-sm text-yellow-700">
-                  {error}
+                <div className="bg-yellow-100 border-4 border-yellow-600 p-4 mb-4">
+                  <p className="font-mono text-yellow-800 text-sm">Debug: {error}</p>
+                  <p className="font-mono text-yellow-600 text-xs mt-1">Check browser console for more details</p>
                 </div>
               )}
-
               <div className="grid sm:grid-cols-2 gap-4">
-                {recentRecipes.map((r) => (
-                  <div key={r.name} className="bg-white border-4 border-black p-4 shadow-brutal">
-                    <div className="flex justify-between mb-2">
-                      <h4 className="font-bold text-sm">{r.name}</h4>
+                {recentRecipes.map((recipe, index) => (
+                  <div key={index} className="bg-white border-4 border-black p-4 shadow-brutal">
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="font-bold text-sm">{recipe.name}</h4>
                       <div className="flex">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`h-3 w-3 ${i < r.rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
+                            className={`h-3 w-3 ${i < recipe.rating ? "text-yellow-500 fill-yellow-500" : "text-gray-300"}`}
                           />
                         ))}
                       </div>
                     </div>
-                    <p className="font-mono text-xs mb-1">{r.date}</p>
-                    <p className="font-mono text-xs mb-2">{r.notes}</p>
+                    <div className="mb-3">
+                      <div className="text-xs font-mono text-gray-600">Date Tried</div>
+                      <div className="font-mono text-sm">{recipe.date}</div>
+                    </div>
+                    <div className="border-t border-gray-300 pt-2 mb-3">
+                      <div className="text-xs font-mono text-gray-600">Notes</div>
+                      <p className="font-mono text-xs">{recipe.notes}</p>
+                    </div>
                     <a
-                      href={r.link}
+                      href={recipe.link}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-blue-600 text-white border-2 border-black px-3 py-1 text-xs font-bold inline-block"
+                      className="bg-blue-600 text-white border-2 border-black px-3 py-1 font-bold text-xs shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block"
                     >
                       VIEW RECIPE
                     </a>
@@ -1153,6 +1173,108 @@ function CookingSection() {
               </div>
             </>
           )}
+        </div>
+      </div>
+
+      {/* Featured Project: Grazing Table */}
+      <div className="bg-white border-8 border-black p-8 shadow-brutal">
+        <h3 className="text-2xl font-black mb-6 uppercase border-b-4 border-black pb-2">
+          FEATURED: GRAZING TABLE HOSTING
+        </h3>
+        <div className="grid md:grid-cols-2 gap-8">
+          <div>
+            <img
+              src="/grazing-table-spread.png"
+              alt="Elaborate Indian grazing table with biryanis, appetizers, chutneys, and sweets"
+              className="w-full h-auto border-4 border-black"
+            />
+          </div>
+          <div className="space-y-4">
+            <p className="font-mono text-lg">
+              I love hosting elaborate grazing tables that bring people together over beautiful, thoughtfully arranged
+              food. This spread featured multiple bite-sized dishes, a DIY chaat station and carefully curated
+              appetizers.
+            </p>
+            <div className="bg-yellow-500 border-4 border-black p-4">
+              <h4 className="font-bold">What Makes a Great Grazing Table:</h4>
+              <ul className="font-mono text-sm mt-2 space-y-1">
+                <li>• Variety of flavors, textures, and colors</li>
+                <li>• Mix of homemade and carefully sourced items</li>
+                <li>• Proper labeling for dietary restrictions</li>
+                <li>• Visual appeal with height and arrangement</li>
+                <li>• Interactive elements like build-your-own options</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Meal Planner Project */}
+      <div className="bg-blue-600 text-white border-8 border-black p-8 shadow-brutal">
+        <h3 className="text-2xl font-black mb-6 uppercase border-b-4 border-white pb-2">
+          TECH MEETS COOKING: MEAL PLANNER
+        </h3>
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="bg-white text-black border-4 border-black p-6">
+            <h4 className="font-bold text-lg mb-4">Personalized Meal Planner App</h4>
+            <p className="font-mono text-sm mb-4">
+              Combined my love for cooking with AI to build an intelligent meal planning app that understands dietary
+              preferences, allergies, and cuisine preferences to generate personalized weekly meal plans.
+            </p>
+            <div className="space-y-2">
+              <h5 className="font-bold">Key Features:</h5>
+              <ul className="font-mono text-xs space-y-1">
+                <li>• Dietary preference understanding (vegetarian, vegan, etc.)</li>
+                <li>• Allergy and ingredient exclusion handling</li>
+                <li>• Cuisine preference balancing with smart variance</li>
+                <li>• Reliable recipe links (not AI-generated)</li>
+                <li>• Meal replacement functionality</li>
+                <li>• PDF meal plan generation</li>
+              </ul>
+            </div>
+            <a
+              href="https://personalised-meal-planner-bot.streamlit.app/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-blue-600 text-white border-2 border-black px-4 py-2 font-bold text-sm shadow-brutal hover:translate-y-1 hover:shadow-none transition-all inline-block mt-4"
+            >
+              TRY THE APP
+            </a>
+          </div>
+          <div className="space-y-4">
+            <h4 className="font-bold text-lg">Why I Built This:</h4>
+            <p className="font-mono">
+              As someone who loves cooking but struggles with meal planning consistency, I wanted to create a tool that
+              could understand my preferences and suggest varied, interesting meals without the decision fatigue.
+            </p>
+            <div className="bg-white text-black border-2 border-black p-4">
+              <h5 className="font-bold mb-2">Technologies Used:</h5>
+              <div className="flex flex-wrap gap-2">
+                <span className="bg-gray-100 border border-black px-2 py-1 text-xs font-mono">Python</span>
+                <span className="bg-gray-100 border border-black px-2 py-1 text-xs font-mono">Streamlit</span>
+                <span className="bg-gray-100 border border-black px-2 py-1 text-xs font-mono">OpenAI API</span>
+                <span className="bg-gray-100 border border-black px-2 py-1 text-xs font-mono">SERP API</span>
+                <span className="bg-gray-100 border border-black px-2 py-1 text-xs font-mono">Supabase</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-gradient-to-r from-yellow-500 to-red-600 border-8 border-black p-8 shadow-brutal">
+        <h3 className="text-2xl font-black mb-6 uppercase border-b-4 border-black pb-2 text-white">
+          COOKING PHILOSOPHY
+        </h3>
+        <div className="bg-white border-4 border-black p-6">
+          <p className="font-mono text-lg mb-4">
+            Cooking is my creative outlet and my way of bringing people together. Whether it's experimenting with a new
+            cooking technique or hosting an elaborate grazing table, food is how I express care and curiosity.
+          </p>
+          <p className="font-mono text-lg">
+            I love crafting colorful, balanced and flavorful meals using local, seasonal ingredients—often reimagining
+            dishes I grew up with. It's my way of staying rooted, being resourceful, and turning everyday cooking into a
+            joyful, expressive act.
+          </p>
         </div>
       </div>
     </div>
